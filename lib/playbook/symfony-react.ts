@@ -468,7 +468,7 @@ if (erreurs) {
       source: "reactony.md §6 · §10",
       surligne: [1, 2, 3, 4],
       piege:
-        'Réactiver Turbo Drive sans décision explicite remonte les îlots React et leur fait perdre leur état. Le site est délibérément en data-turbo="false".',
+        'Une tolérance : un comportement DOM sans état, sous une trentaine de lignes, un copier-dans-le-presse-papier par exemple, où un îlot serait disproportionné. Et réactiver Turbo Drive sans décision explicite remonte les îlots React et leur fait perdre leur état. Le site est délibérément en data-turbo="false".',
       code: `{# Le montage, et rien d'autre. #}
 <div {{ react_component('AlerteForm', {
     farm: farm|serialize('json', { groups: ['farm:read'] }),
