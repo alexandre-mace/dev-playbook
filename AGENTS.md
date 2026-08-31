@@ -45,6 +45,29 @@ laisserait donc un deck vivant derrière elle, qui écouterait les flèches et �
 l'ancre de l'URL. D'où la garde explicite dans `components/playbook.tsx` : le deck ne se
 rend que pour la pile et la piste actives.
 
+## La page tient dans l'écran, mais on ne l'y force pas
+
+Rien ici ne verrouille la hauteur : pas de `h-dvh`, pas d'`overflow-hidden`. La page
+défile comme n'importe quelle page. C'est la carte du deck qui est dimensionnée pour que,
+en pratique, il n'y ait rien à faire défiler :
+
+```
+md:h-[clamp(22rem,calc(100dvh_-_21rem),42rem)]
+```
+
+Les `21rem` sont la somme mesurée de ce qui entoure la carte : l'en-tête, la thèse de la
+pile, les deux rangées d'onglets, les commandes du deck et le footer. Le pari tient de
+700px de haut (la carte fait alors 364px) jusqu'à 1000 et au-delà, où le plafond de
+`42rem` reprend la main.
+
+**Les deux bornes du clamp sont le filet, pas la contrainte.** Sous 700px de haut, le
+plancher de `22rem` gagne et la page se met à défiler : c'est voulu, mieux vaut défiler
+qu'écraser le bloc de code. Si une thèse passe à trois lignes ou qu'une rangée d'onglets
+s'allonge, il faut remesurer les `21rem`, pas ajouter une contrainte de hauteur.
+
+Sous `md`, le `md:` tombe : la carte reprend `h-[min(70vh,42rem)]`. Sans ce repli, le
+bloc de code tombait à quatre lignes sur mobile.
+
 ## Biome ne voit pas le kit
 
 `components/ui/`, `brand.tsx`, `page-hero.tsx`, `made-with-love.tsx` et `back-to-top.tsx` viennent du registry

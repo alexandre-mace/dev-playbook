@@ -93,7 +93,7 @@ export function Deck({
     <div
       ref={conteneur}
       tabIndex={-1}
-      className="flex flex-col gap-5 outline-none"
+      className="flex flex-col gap-4 outline-none"
     >
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="-ml-4 flex touch-pan-y items-stretch">
@@ -108,22 +108,32 @@ export function Deck({
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      {/* Les commandes ferment le deck : la page tenant en général dans le viewport,
+          elles sont sous les yeux, et le nombre d'écrans se lit dès l'arrivée. */}
+      <div className="flex shrink-0 items-center gap-3">
+        {/* Le raccourci vit sur le bouton : un rappel clavier à côté redoublait
+            les deux mêmes flèches. */}
         <Button
           variant="secondary"
           size="icon"
+          className="size-8"
           onClick={precedent}
           disabled={index === 0}
           aria-label="Écran précédent"
+          aria-keyshortcuts="ArrowLeft"
+          title="Écran précédent (←)"
         >
           <ArrowLeft />
         </Button>
         <Button
           variant="secondary"
           size="icon"
+          className="size-8"
           onClick={suivant}
           disabled={index === ecrans.length - 1}
           aria-label="Écran suivant"
+          aria-keyshortcuts="ArrowRight"
+          title="Écran suivant (→)"
         >
           <ArrowRight />
         </Button>
@@ -134,6 +144,7 @@ export function Deck({
               key={ecran.id}
               type="button"
               tabIndex={-1}
+              title={`${rang + 1}. ${ecran.titre}`}
               onClick={() => embla?.scrollTo(rang)}
               className={cn(
                 "h-1 flex-1 rounded-full transition-colors",
@@ -155,23 +166,29 @@ function Carte({ ecran, actif }: { ecran: EcranColore; actif: boolean }) {
   return (
     <article
       aria-hidden={!actif}
+      // inert : la carte voisine sort aussi de l'ordre de tabulation, sinon on
+      // traverse autant de boutons Copier invisibles qu'il y a d'écrans.
+      inert={!actif}
       className={cn(
-        "flex h-[min(70vh,42rem)] flex-col overflow-hidden rounded-xl border bg-card transition-opacity duration-300",
+        // 21rem : ce que prennent l'en-tête, les onglets, les commandes et le footer.
+        // Le pari, pas la contrainte : la page ne défile en général pas, et le clamp
+        // la laisse défiler plutôt que d'écraser le code sur un écran trop court.
+        "flex h-[min(70vh,42rem)] flex-col overflow-hidden rounded-xl border bg-card transition-opacity duration-300 md:h-[clamp(22rem,calc(100dvh_-_21rem),42rem)]",
         !actif && "opacity-45",
       )}
     >
-      <header className="shrink-0 px-6 pt-5 pb-4">
-        <div className="flex flex-wrap items-center gap-2">
+      <header className="shrink-0 px-6 pt-4 pb-3">
+        <div className="flex flex-wrap items-baseline gap-2">
           <Badge variant="secondary" className="font-mono">
             {ecran.rang}
           </Badge>
-          <span className="font-mono text-xs text-muted-foreground">
+          <h3 className="text-lg font-semibold tracking-tight text-balance">
+            {ecran.titre}
+          </h3>
+          <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground">
             {ecran.source}
           </span>
         </div>
-        <h3 className="mt-3 text-xl font-semibold tracking-tight text-balance">
-          {ecran.titre}
-        </h3>
         <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-pretty text-muted-foreground">
           {ecran.intention}
         </p>
@@ -186,7 +203,7 @@ function Carte({ ecran, actif }: { ecran: EcranColore; actif: boolean }) {
       />
 
       {ecran.piege && (
-        <footer className="flex shrink-0 gap-3 px-6 py-4">
+        <footer className="flex shrink-0 gap-3 px-6 py-3">
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" />
           <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
             <span className="font-medium text-foreground">Le piège. </span>

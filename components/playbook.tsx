@@ -90,8 +90,8 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
       </TabsList>
 
       {piles.map((candidate) => (
-        <TabsContent key={candidate.id} value={candidate.id} className="mt-6">
-          <p className="max-w-3xl text-sm leading-relaxed text-pretty text-muted-foreground">
+        <TabsContent key={candidate.id} value={candidate.id} className="mt-3">
+          <p className="max-w-4xl text-sm leading-relaxed text-pretty text-muted-foreground">
             <span className="font-medium text-foreground">
               {candidate.these}
             </span>{" "}
@@ -99,17 +99,17 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
               href={`${SOURCE}/blob/main/${candidate.guideline.split(" ")[0]}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 font-mono text-xs"
+              className="inline-flex items-baseline gap-1 font-mono text-xs"
             >
               {candidate.guideline}
-              <ExternalLink className="size-3" />
+              <ExternalLink className="size-3 self-center" />
             </TextLink>
           </p>
 
           <Tabs
             value={pisteId}
             onValueChange={(valeur) => changerDePiste(valeur as string)}
-            className="mt-6"
+            className="mt-4"
           >
             <TabsList className="max-w-full overflow-x-auto">
               {candidate.pistes.map((candidatePiste) => (
@@ -130,11 +130,8 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
               <TabsContent
                 key={candidatePiste.id}
                 value={candidatePiste.id}
-                className="mt-5"
+                className="mt-3"
               >
-                <p className="mb-5 max-w-3xl text-sm text-pretty text-muted-foreground">
-                  {candidatePiste.resume}
-                </p>
                 {/* Base UI garde un panneau monté après sa première activation.
                     Sans cette garde, chaque piste deja vue laisserait un deck vivant
                     derriere elle, qui écouterait les flèches et écrirait l'ancre. */}
