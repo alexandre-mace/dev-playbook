@@ -500,21 +500,33 @@ return $this->createQueryBuilder('a')
       rang: "Logs",
       titre: "Un secret en query string finit dans les logs",
       intention:
-        "L'URL complète est journalisée par le serveur, le proxy et Sentry. Un token en paramètre est un token stocké, partout.",
+        "HttpClient journalise chaque appel en INFO avec l'URL complète, query string comprise. Une API amont qui s'authentifie par un paramètre key ou token écrit donc son propre identifiant dans les logs, et dans les breadcrumbs Sentry.",
+      fichier: "src/Logger/RedactQueryStringSecretsProcessor.php",
       langage: "php",
       source: "symfony-guidelines.md, Logging & Sentry",
-      surligne: [3, 6],
+      surligne: [5, 9, 10, 11],
       piege:
-        "Sentry capture la requête par défaut. On restreint la capture avant le premier vrai utilisateur, pas après.",
+        "Le contrat appartient à l'amont, donc le paramètre ne peut en général pas passer en en-tête : on caviarde à la sortie. Et avec un handler fingers_crossed, ces lignes INFO remontent dès que quoi que ce soit d'autre échoue dans la même requête, c'est-à-dire précisément quand l'amont est instable.",
       code: `<?php
 
-// Non : le token traverse les logs d'accès, le proxy et le breadcrumb Sentry.
-$this->client->request('GET', '/export?token=' . $token);
+// Appliqué à tous les canaux : la requête part intacte, seule la ligne de log change.
+#[AsMonologProcessor]
+final class RedactQueryStringSecretsProcessor
+{
+    private const SENSITIVE = ['key', 'token', 'api_key', 'access_token', 'password'];
 
-// Oui : dans un en-tête.
-$this->client->request('GET', '/export', ['headers' => ['X-Auth-Token' => $token]]);
+    public function __invoke(LogRecord $record): LogRecord
+    {
+        return $record->with(message: preg_replace(
+            '/\\b('.implode('|', self::SENSITIVE).')=[^&"\\s]+/i',
+            '$1=[REDACTED]',
+            $record->message,
+        ));
+    }
+}
 
-// Et la donnée personnelle ne va ni dans une URL, ni dans un log, ni dans un breadcrumb.`,
+// Pour /gap-code : un client d'API qui passe un identifiant dans query est un
+// constat Haute tant que rien ne caviarde à la sortie.`,
     },
   ],
 };
