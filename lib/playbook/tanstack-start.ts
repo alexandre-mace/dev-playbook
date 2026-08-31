@@ -238,18 +238,26 @@ function NouvelleTache() {
       fichier: "src/serveur/facture.ts",
       langage: "ts",
       source: "tanstack-start-guidelines.md, Patterns · §3 bis",
-      surligne: [5, 8],
+      surligne: [9, 14, 19],
       piege:
         "Elle compile en route publique appelable avec n'importe quel payload. Garder la route qui rend l'interface ne garde rien : la vérification est dans la fonction.",
-      code: `import { createServerFn } from "@tanstack/react-start";
+      code: `import { createMiddleware, createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+// context ne contient que ce qu'un middleware y met : la session en fait partie.
+const authentifie = createMiddleware({ type: "function" }).server(
+  async ({ next }) => {
+    const { userId } = await lireSession();
+    if (!userId) throw new Error("Non authentifié");
+    return next({ context: { userId } });
+  },
+);
+
 export const genererFacture = createServerFn({ method: "POST" })
+  .middleware([authentifie])
   .validator(z.object({ commandeId: z.string() }))
   .handler(async ({ data, context }) => {
-    // Session, puis autorisation sur l'objet, avant tout travail.
-    if (!context.userId) throw new Error("Non authentifié");
-
+    // La session est acquise, reste l'autorisation sur l'objet visé.
     const commande = await lireCommande(data.commandeId);
     if (commande.clientId !== context.userId) throw new Error("Interdit");
 
@@ -406,9 +414,10 @@ const { data } = useSuspenseQuery(convexQuery(api.taches.listerMiennes, {}));
       code: `import { Migrations } from "@convex-dev/migrations";
 
 import { components } from "./_generated/api";
-import type { DataModel } from "./_generated/dataModel";
+import schema from "./schema";
 
-export const migrations = new Migrations<DataModel>(components.migrations);
+// Le schema passe en option : c'est lui qui type migrateOne, table par table.
+export const migrations = new Migrations(components.migrations, { schema });
 
 export const remplirNoteInterne = migrations.define({
   table: "taches",

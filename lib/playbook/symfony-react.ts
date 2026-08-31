@@ -368,14 +368,14 @@ public function upload(string $id, #[MapRequestPayload] ImageProjetDto $dto): Re
     {
       id: "php85",
       rang: "PHP 8.5",
-      titre: "Ce que la 8.5 apporte, utilisable maintenant",
+      titre: "Ce que la 8.5 apporte, une fois le runtime dessus",
       intention:
-        "Le runtime est en 8.5, le plancher composer reste >= 8.4. Ces formes sont disponibles dès aujourd'hui.",
+        "Le plancher composer reste >= 8.4. La 8.5 se demande explicitement à CleverCloud : ses images par défaut servent encore 8.4.24.",
       langage: "php",
-      source: "symfony-guidelines.md, PHP 8.4+",
+      source: "symfony-guidelines.md, PHP 8.4+ (CleverCloud runtime)",
       surligne: [3, 6],
       piege:
-        "Plancher de sécurité : runtime >= 8.5.9. Le correctif y ferme CVE-2026-17543, une injection SQL dans ext-pgsql via pg_insert() et ses voisines.",
+        "Épingler CC_PHP_VERSION sur la mineure, jamais sur le majeur nu : 8 résout vers la mineure par défaut de Clever au déploiement, donc le runtime traîne en silence puis saute sans prévenir. Plancher de sécurité : >= 8.5.9 sur la branche 8.5, >= 8.4.24 sur la 8.4, où est corrigée CVE-2026-17543, une injection SQL dans ext-pgsql via pg_insert() et ses voisines.",
       code: `<?php
 
 $slug = $titre |> trim(...) |> strtolower(...);
