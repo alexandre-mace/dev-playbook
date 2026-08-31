@@ -107,7 +107,7 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
             onValueChange={(valeur) => changerDePiste(valeur as string)}
             className="mt-6"
           >
-            <TabsList variant="line" className="max-w-full overflow-x-auto">
+            <TabsList className="max-w-full overflow-x-auto">
               {candidate.pistes.map((candidatePiste) => (
                 <TabsTrigger
                   key={candidatePiste.id}
