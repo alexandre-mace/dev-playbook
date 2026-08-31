@@ -48,15 +48,32 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
     pile.pistes.find((candidate) => candidate.id === pisteId) ?? pile.pistes[0];
   const cle = `${pile.id}/${piste.id}`;
 
+  /** L'ancre suit tout ce qui change : la pile, la piste, l'écran. */
+  function ecrireAncre(cleVisee: string, index: number) {
+    window.history.replaceState(null, "", `#${cleVisee}/${index}`);
+  }
+
   function noterPosition(index: number) {
     positions.current[cle] = index;
-    window.history.replaceState(null, "", `#${cle}/${index}`);
+    ecrireAncre(cle, index);
+  }
+
+  function changerDePile(valeur: string) {
+    setPileId(valeur);
+    const cleVisee = `${valeur}/${pisteId}`;
+    ecrireAncre(cleVisee, positions.current[cleVisee] ?? 0);
+  }
+
+  function changerDePiste(valeur: string) {
+    setPisteId(valeur);
+    const cleVisee = `${pileId}/${valeur}`;
+    ecrireAncre(cleVisee, positions.current[cleVisee] ?? 0);
   }
 
   return (
     <Tabs
       value={pileId}
-      onValueChange={(valeur) => setPileId(valeur as string)}
+      onValueChange={(valeur) => changerDePile(valeur as string)}
     >
       <TabsList className="h-auto w-full max-w-full flex-nowrap overflow-x-auto p-1 sm:w-fit">
         {piles.map((candidate) => (
@@ -90,7 +107,7 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
 
           <Tabs
             value={pisteId}
-            onValueChange={(valeur) => setPisteId(valeur as string)}
+            onValueChange={(valeur) => changerDePiste(valeur as string)}
             className="mt-6"
           >
             <TabsList

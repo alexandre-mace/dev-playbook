@@ -100,7 +100,7 @@ console.log("Total 2023 :", total.toFixed(1), "Gt (attendu ~37,4)");
 console.log(emissions.length, "lignes,", new Set(emissions.map((e) => e.pays)).size, "pays");`,
     },
     {
-      id: "fichier-généré",
+      id: "fichier-genere",
       rang: "3",
       titre: "Le fichier généré",
       intention:
@@ -461,7 +461,7 @@ export default catchError(Repli);`,
 }`,
     },
     {
-      id: "thème-clair",
+      id: "theme-clair",
       rang: "Style",
       titre: "Thème clair unique",
       intention:
@@ -511,7 +511,7 @@ export default catchError(Repli);`,
 };
 
 const pieges = {
-  id: "pièges",
+  id: "pieges",
   label: "Pièges",
   resume:
     "Ce qui ne casse pas le build, ne fait pas rougir le linter, et se paye plus tard.",
@@ -598,7 +598,7 @@ components/
 const sur = /^https?:\\/\\//.test(lien.url) ? lien.url : "#";`,
     },
     {
-      id: "déploiements",
+      id: "deploiements",
       rang: "Déploiement",
       titre: "Pousser, c'est déployer",
       intention:

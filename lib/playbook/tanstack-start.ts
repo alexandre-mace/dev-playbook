@@ -61,7 +61,7 @@ export const Route = createFileRoute("/produits")({
 });`,
     },
     {
-      id: "schéma",
+      id: "schema",
       rang: "3",
       titre: "Le schéma Convex",
       intention:
@@ -158,7 +158,7 @@ convexQueryClient.connect(queryClient);
 // L'application est montée dans ConvexProvider et QueryClientProvider.`,
     },
     {
-      id: "lecture-écriture",
+      id: "lecture-ecriture",
       rang: "6",
       titre: "Lire et écrire depuis l'écran",
       intention:
@@ -378,7 +378,7 @@ export const Route = createFileRoute("/_authentifie")({
 // Clerk par défaut, Better Auth quand l'auto-hébergement est exigé. Jamais les deux.`,
     },
     {
-      id: "état-serveur",
+      id: "etat-serveur",
       rang: "État",
       titre: "L'état serveur n'est pas de l'état client",
       intention:
@@ -441,12 +441,12 @@ export const remplirNoteInterne = migrations.define({
 };
 
 const pieges = {
-  id: "pièges",
+  id: "pieges",
   label: "Pièges",
   resume: "Ce que le framework rend facile à perdre de vue.",
   ecrans: [
     {
-      id: "frontière",
+      id: "frontiere",
       rang: "Sécurité",
       titre: "Le client et le serveur ont l'air d'être le même fichier",
       intention:

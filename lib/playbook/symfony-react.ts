@@ -410,7 +410,7 @@ AlerteRechercheFactory::createMany(3, ['canaux' => ['sms']]);
 };
 
 const pieges = {
-  id: "pièges",
+  id: "pieges",
   label: "Pièges",
   resume:
     "Les anti-patterns fermés. Trouvés dans l'existant, ils sont à refactorer, pas à recopier.",
