@@ -53,16 +53,10 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
     window.history.replaceState(null, "", `#${cle}/${index}`);
   }
 
-  // flex-col sur les Tabs : shadcn base-nova ecrit encore les variantes d'orientation en
-  // data-horizontal:, donc l'attribut booleen [data-horizontal]. Base UI 1.7 n'en emet
-  // aucun, il ecrit data-orientation="horizontal", et sans ce flex-col la liste d'onglets
-  // et les panneaux se rangent en ligne. Corrige dans le kit, a retirer d'ici des que le
-  // registry est publie et que pnpm dlx shadcn add @alexandremace/tabs a repris le fichier.
   return (
     <Tabs
       value={pileId}
       onValueChange={(valeur) => setPileId(valeur as string)}
-      className="flex-col"
     >
       <TabsList className="h-auto w-full max-w-full flex-nowrap overflow-x-auto p-1 sm:w-fit">
         {piles.map((candidate) => (
@@ -97,7 +91,7 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
           <Tabs
             value={pisteId}
             onValueChange={(valeur) => setPisteId(valeur as string)}
-            className="mt-6 flex-col"
+            className="mt-6"
           >
             <TabsList
               variant="line"

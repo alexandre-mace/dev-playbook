@@ -38,15 +38,7 @@ tout au build par Shiki et descend le HTML en props.
 **Quand une guideline bouge, l'écran correspondant bouge.** C'est le seul contrat du
 dépôt, et rien ne l'automatise : le champ `source` de chaque écran dit où regarder.
 
-## Deux choses à savoir avant de toucher aux onglets
-
-**Les variantes d'orientation de shadcn ne matchent plus rien.** `base-nova` écrit encore
-`data-horizontal:` / `data-vertical:`, c'est-à-dire les attributs booléens
-`[data-horizontal]` / `[data-vertical]`. Base UI 1.7 n'en émet aucun : il écrit
-`data-orientation="horizontal"`. Sans `className="flex-col"` sur `<Tabs>`, la liste
-d'onglets et les panneaux se rangent donc en ligne. Corrigé dans le kit, en
-`data-[orientation=horizontal]:` ; le contournement d'ici part quand le registry est publié
-et que `pnpm dlx shadcn@latest add @alexandremace/tabs` a repris le fichier.
+## Une chose à savoir avant de toucher aux onglets
 
 **Base UI garde un panneau monté après sa première activation.** Chaque piste déjà vue
 laisserait donc un deck vivant derrière elle, qui écouterait les flèches et écrirait
