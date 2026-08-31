@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Deck } from "@/components/deck";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TextLink } from "@/components/ui/text-link";
 import type { PileColoree } from "@/lib/playbook/rendu";
 import { SOURCE } from "@/lib/site";
 
@@ -75,13 +76,9 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
       value={pileId}
       onValueChange={(valeur) => changerDePile(valeur as string)}
     >
-      <TabsList className="h-auto w-full max-w-full flex-nowrap overflow-x-auto p-1 sm:w-fit">
+      <TabsList className="max-w-full overflow-x-auto">
         {piles.map((candidate) => (
-          <TabsTrigger
-            key={candidate.id}
-            value={candidate.id}
-            className="h-9 flex-none px-4 text-sm"
-          >
+          <TabsTrigger key={candidate.id} value={candidate.id} className="px-3">
             <span className="hidden sm:inline">{candidate.label}</span>
             <span className="sm:hidden">{candidate.labelCourt}</span>
           </TabsTrigger>
@@ -94,15 +91,15 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
             <span className="font-medium text-foreground">
               {candidate.these}
             </span>{" "}
-            <a
+            <TextLink
               href={`${SOURCE}/blob/main/${candidate.guideline.split(" ")[0]}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 underline decoration-primary/40 underline-offset-4 transition-colors hover:decoration-primary"
+              className="inline-flex items-center gap-1 font-mono text-xs"
             >
-              <span className="font-mono text-xs">{candidate.guideline}</span>
+              {candidate.guideline}
               <ExternalLink className="size-3" />
-            </a>
+            </TextLink>
           </p>
 
           <Tabs
@@ -110,15 +107,12 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
             onValueChange={(valeur) => changerDePiste(valeur as string)}
             className="mt-6"
           >
-            <TabsList
-              variant="line"
-              className="h-auto max-w-full flex-wrap justify-start gap-y-1 p-0"
-            >
+            <TabsList variant="line" className="max-w-full overflow-x-auto">
               {candidate.pistes.map((candidatePiste) => (
                 <TabsTrigger
                   key={candidatePiste.id}
                   value={candidatePiste.id}
-                  className="h-8 flex-none px-3"
+                  className="px-3"
                 >
                   {candidatePiste.label}
                   <span className="ml-1.5 font-mono text-[11px] text-muted-foreground">

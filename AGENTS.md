@@ -47,6 +47,6 @@ rend que pour la pile et la piste actives.
 
 ## Biome ne voit pas le kit
 
-`components/ui/`, `brand.tsx`, `page-hero.tsx` et `back-to-top.tsx` viennent du registry
+`components/ui/`, `brand.tsx`, `page-hero.tsx`, `made-with-love.tsx` et `back-to-top.tsx` viennent du registry
 et sont exclus dans `biome.json` : les reformater créerait une dérive avec le kit, qui
 est la source.

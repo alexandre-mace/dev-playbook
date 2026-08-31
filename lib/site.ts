@@ -2,7 +2,7 @@
 export const TITRE = "Dev Playbook";
 
 export const DESCRIPTION =
-  "Comment se fait une feature full-stack, aujourd'hui, dans chacune des trois piles de dev-standards.";
+  "Les guidelines de dev-standards, montrées en code, pour les trois stacks.";
 
 export const DOMAINE = "https://dev-playbook.alexandremace.fr";
 

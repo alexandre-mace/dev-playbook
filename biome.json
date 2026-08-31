@@ -16,7 +16,8 @@
       "!components/ui",
       "!components/brand.tsx",
       "!components/page-hero.tsx",
-      "!components/back-to-top.tsx"
+      "!components/back-to-top.tsx",
+      "!components/made-with-love.tsx"
     ]
   },
   "formatter": {
