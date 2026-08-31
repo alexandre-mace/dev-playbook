@@ -83,6 +83,37 @@ export default defineSchema({
 });`,
     },
     {
+      id: "genere",
+      rang: "3 bis",
+      titre: "Ce que Convex a écrit pour vous",
+      intention:
+        "Le schéma génère le modèle de données et les constructeurs de fonctions. Le routeur génère son arbre. Les deux se commitent, aucun des deux ne s'édite.",
+      fichier: "convex/_generated/",
+      langage: "ts",
+      source: "tanstack-start-guidelines.md §3 · §1",
+      surligne: [10, 11, 12, 18],
+      piege:
+        "Un api.taches.listerMiennes qui cesse de compiler après un renommage, ce n'est pas le générateur qui casse : c'est lui qui montre les appels devenus faux. C'est tout l'intérêt de commiter ce qu'il écrit.",
+      code: `// Régénéré à chaque \`convex dev\`, commité, jamais édité :
+//
+//   convex/_generated/
+//     api.d.ts        api et components, une entrée par fonction publiée
+//     dataModel.d.ts  Doc, Id, TableNames, DataModel, tirés du schéma
+//     server.d.ts     query, mutation, action, et leurs variantes internal
+//
+//   routeTree.gen.ts  l'arbre de routes, écrit par le plugin du routeur
+
+import { api } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
+
+// Côté serveur : les constructeurs connaissent déjà le modèle de données.
+export const lister = query({ handler: (ctx) => ctx.db.query("taches").collect() });
+
+// Côté client : arguments et valeur de retour sont typés de bout en bout.
+useSuspenseQuery(convexQuery(api.taches.lister, {}));`,
+    },
+    {
       id: "query-mutation",
       rang: "4",
       titre: "La query lit, la mutation écrit",
@@ -403,29 +434,6 @@ const { data } = useSuspenseQuery(convexQuery(api.taches.listerMiennes, {}));
 // Zustand pour ce qui est client et global : un thème, une sidebar, un assistant en cours.`,
     },
     {
-      id: "migrations",
-      rang: "Convex",
-      titre: "Les migrations de données",
-      intention:
-        "Par @convex-dev/migrations, jamais par une boucle take(n) écrite à la main.",
-      fichier: "convex/migrations.ts",
-      langage: "ts",
-      source: "tanstack-start-guidelines.md §2 · §3",
-      code: `import { Migrations } from "@convex-dev/migrations";
-
-import { components } from "./_generated/api";
-import schema from "./schema";
-
-// Le schema passe en option : c'est lui qui type migrateOne, table par table.
-export const migrations = new Migrations(components.migrations, { schema });
-
-export const remplirNoteInterne = migrations.define({
-  table: "taches",
-  migrateOne: (ctx, tache) =>
-    tache.noteInterne === undefined ? { noteInterne: "" } : undefined,
-});`,
-    },
-    {
       id: "table",
       rang: "Compilateur",
       titre: "Ne jamais passer une instance de librairie en prop",
@@ -503,24 +511,6 @@ return { _id, titre, faite };
 
 // Et ce qui n'est pas destiné au client : internalQuery / internalMutation,
 // les seules que le client ne peut pas appeler.`,
-    },
-    {
-      id: "start-inutile",
-      rang: "Pile",
-      titre: "Garder Start quand rien ne s'en sert",
-      intention:
-        "Sans SSR, sans fonction serveur et sans streaming, la doc TanStack recommande de lâcher Start pour TanStack Router seul, en SPA.",
-      langage: "md",
-      source: "tanstack-start-guidelines.md, ce que ce fichier couvre",
-      code: `La question qui tranche entre next/ et tanstack-start/, une seule, testable :
-
-  le rendu serveur ferait-il economiser du JavaScript au navigateur ?
-
-  oui  -> les pages sont du contenu, les Server Components servent a quelque chose : next/
-  non  -> tout est interactif de toute facon : tanstack-start/ et des URL typees
-
-Elle se tranche au demarrage du projet. Un projet mixte, landing plus application,
-reste un seul projet a deux audiences : la landing servie en statique, l'application ici.`,
     },
   ],
 };

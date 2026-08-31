@@ -2,7 +2,7 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { ArrowLeft, ArrowRight, TriangleAlert } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CodeBlock } from "@/components/code-block";
 import { Badge } from "@/components/ui/badge";
@@ -24,12 +24,16 @@ export function Deck({
   ecrans,
   depart,
   onPosition,
+  focusAuMontage,
 }: {
   ecrans: EcranColore[];
   /** Position restaurée quand on revient sur une piste déjà parcourue. */
   depart: number;
   onPosition: (index: number) => void;
+  /** Vrai dès le premier changement d'onglet : le deck prend alors le focus. */
+  focusAuMontage: boolean;
 }) {
+  const conteneur = useRef<HTMLDivElement>(null);
   const [emblaRef, embla] = useEmblaCarousel({
     align: "center",
     startIndex: depart,
@@ -49,6 +53,12 @@ export function Deck({
       embla.off("select", surSelection);
     };
   }, [embla, onPosition]);
+
+  // Le deck remonte à chaque changement d'onglet : il prend le focus en arrivant,
+  // pour que les flèches le pilotent au lieu de piloter la liste d'onglets.
+  useEffect(() => {
+    if (focusAuMontage) conteneur.current?.focus({ preventScroll: true });
+  }, [focusAuMontage]);
 
   const precedent = useCallback(() => embla?.scrollPrev(), [embla]);
   const suivant = useCallback(() => embla?.scrollNext(), [embla]);
@@ -78,7 +88,13 @@ export function Deck({
   }, [embla, ecrans.length]);
 
   return (
-    <div className="flex flex-col gap-5">
+    // tabIndex -1 : pas un arrêt de tabulation, mais le focus s'y pose après un
+    // changement d'onglet, pour que les flèches pilotent le deck et non la liste.
+    <div
+      ref={conteneur}
+      tabIndex={-1}
+      className="flex flex-col gap-5 outline-none"
+    >
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="-ml-4 flex touch-pan-y items-stretch">
           {ecrans.map((ecran, rang) => (

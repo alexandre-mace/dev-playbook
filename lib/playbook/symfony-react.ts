@@ -85,30 +85,36 @@ public function create(
 #   make types && git diff --exit-code openapi.yaml assets/lib/api/`,
     },
     {
-      id: "openapi-ts",
+      id: "genere",
       rang: "3 bis",
-      titre: "La configuration hey-api",
+      titre: "Ce que la commande a écrit pour vous",
       intention:
-        "Cinq plugins, tous embarqués dans le même paquet. Le pin exact est demandé par les mainteneurs : le projet est en pre-1.0.",
-      fichier: "openapi-ts.config.ts",
+        "Une commande, et tout le contrat backend existe en TypeScript : les types, les schémas Zod, une fonction par endpoint, les options TanStack Query. Ce dossier se consomme, il ne s'écrit pas.",
+      fichier: "assets/lib/api/",
       langage: "ts",
       source: "reactony.md §5",
-      surligne: [10],
-      code: `import { defineConfig } from "@hey-api/openapi-ts";
+      surligne: [9, 10, 13, 16, 19],
+      piege:
+        "Le dossier est commité, comme openapi.yaml. La porte de dérive compare le généré au commité : git diff --exit-code ne verrait rien s'il était ignoré.",
+      code: `// Écrit par \`make types\`, commité, jamais édité à la main :
+//
+//   assets/lib/api/
+//     types.gen.ts   les types du contrat, un par schéma OpenAPI
+//     zod.gen.ts     les schémas Zod, tirés des contraintes #[Assert] du PHP
+//     sdk.gen.ts     une fonction typée par endpoint, multipart compris
+//     ...            les queryOptions et mutationOptions du plugin TanStack Query
 
-export default defineConfig({
-  input: "./openapi.yaml",
-  output: "assets/lib/api",
-  plugins: [
-    "@hey-api/typescript",
-    "@hey-api/client-fetch",
-    { name: "@hey-api/sdk", validator: { response: "zod" } },
-    "zod",
-    "@tanstack/react-query", // nom du plugin embarque, pas un paquet npm
-  ],
-});
+import { getAlerteListOptions, postAlerte } from "@/lib/api";
+import { zAlerteRecherche } from "@/lib/api/zod.gen";
 
-// pnpm add -D -E @hey-api/openapi-ts`,
+// Lire : les options générées portent déjà la queryKey et le queryFn.
+const { data } = useQuery({ ...getAlerteListOptions({ query: filtres }) });
+
+// Valider : le schéma descend des contraintes PHP, il ne se réécrit pas ici.
+const form = useForm({ resolver: zodResolver(zAlerteRecherche) });
+
+// Écrire : une fonction par endpoint, typée sur le corps attendu.
+await postAlerte({ body: valeurs });`,
     },
     {
       id: "formulaire",
@@ -364,29 +370,6 @@ public function upload(string $id, #[MapRequestPayload] ImageProjetDto $dto): Re
       code: `{# la page est ouverte à plusieurs rôles, les boutons ne le sont pas #}
 {% if is_granted('edit', structure) %}...{% endif %}
 {% if is_granted('show_groups', structure) %}...{% endif %}`,
-    },
-    {
-      id: "php85",
-      rang: "PHP 8.5",
-      titre: "Ce que la 8.5 apporte, une fois le runtime dessus",
-      intention:
-        "Le plancher composer reste >= 8.4. La 8.5 se demande explicitement à CleverCloud : ses images par défaut servent encore 8.4.24.",
-      langage: "php",
-      source: "symfony-guidelines.md, PHP 8.4+ (CleverCloud runtime)",
-      surligne: [3, 6],
-      piege:
-        "Épingler CC_PHP_VERSION sur la mineure, jamais sur le majeur nu : 8 résout vers la mineure par défaut de Clever au déploiement, donc le runtime traîne en silence puis saute sans prévenir. Plancher de sécurité : >= 8.5.9 sur la branche 8.5, >= 8.4.24 sur la 8.4, où est corrigée CVE-2026-17543, une injection SQL dans ext-pgsql via pg_insert() et ses voisines.",
-      code: `<?php
-
-$slug = $titre |> trim(...) |> strtolower(...);
-
-// Withers sur des propriétés readonly, sans constructeur de recopie.
-$suivant = clone($commande, ['statut' => Statut::Payee]);
-
-#[\\NoDiscard]
-public function valider(): Resultat { /* ... */ }
-
-// À éviter, dépréciés en 8.5 : (integer), (boolean), (double), __sleep()/__wakeup().`,
     },
     {
       id: "foundry",

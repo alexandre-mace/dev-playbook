@@ -33,6 +33,8 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
   const positions = useRef<Record<string, number>>({});
   /** Incrémenté à la restauration d'ancre, pour forcer un remontage du deck. */
   const [revision, setRevision] = useState(0);
+  /** Passe à vrai au premier changement d'onglet, et le deck prend alors le focus. */
+  const [focusAuMontage, setFocusAuMontage] = useState(false);
 
   useEffect(() => {
     const ancre = lireAncre(piles);
@@ -60,12 +62,14 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
   }
 
   function changerDePile(valeur: string) {
+    setFocusAuMontage(true);
     setPileId(valeur);
     const cleVisee = `${valeur}/${pisteId}`;
     ecrireAncre(cleVisee, positions.current[cleVisee] ?? 0);
   }
 
   function changerDePiste(valeur: string) {
+    setFocusAuMontage(true);
     setPisteId(valeur);
     const cleVisee = `${pileId}/${valeur}`;
     ecrireAncre(cleVisee, positions.current[cleVisee] ?? 0);
@@ -137,6 +141,7 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
                 {candidate.id === pileId && candidatePiste.id === pisteId && (
                   <Deck
                     key={`${cle}-${revision}`}
+                    focusAuMontage={focusAuMontage}
                     ecrans={candidatePiste.ecrans}
                     depart={positions.current[cle] ?? 0}
                     onPosition={noterPosition}

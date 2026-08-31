@@ -461,33 +461,6 @@ export default catchError(Repli);`,
 }`,
     },
     {
-      id: "theme-clair",
-      rang: "Style",
-      titre: "Thème clair unique",
-      intention:
-        "Une ligne neutralise les classes dark: livrées par shadcn. La classe .dark n'est jamais posée : un thème sombre est une décision de projet, pas un défaut.",
-      fichier: "app/globals.css",
-      langage: "css",
-      source: "next-guidelines.md §3",
-      surligne: [4],
-      code: `@import "tailwindcss";
-
-/* La variante dark ne s'active que sous une classe .dark, qu'on ne pose jamais. */
-@custom-variant dark (&:is(.dark *));
-
-:root {
-  --background: #faf8f0;
-  --primary: #0737ff;
-  --radius: 0.625rem;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-primary: var(--primary);
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-}`,
-    },
-    {
       id: "lien-bouton",
       rang: "Kit",
       titre: "Un lien reste un lien",
@@ -596,22 +569,6 @@ components/
 
 // Le href se valide avant d'être posé.
 const sur = /^https?:\\/\\//.test(lien.url) ? lien.url : "#";`,
-    },
-    {
-      id: "deploiements",
-      rang: "Déploiement",
-      titre: "Pousser, c'est déployer",
-      intention:
-        "Le webhook Vercel part sur main. Le plan Hobby plafonne à 100 déploiements par 24 h glissantes, tous projets confondus.",
-      langage: "bash",
-      source: "next-guidelines.md §7",
-      piege:
-        "La rétention Hobby est de 30 jours : une vieille URL de déploiement n'est pas une archive.",
-      code: `# Grouper ses poussées : chaque push de chaque projet prend un créneau.
-git push origin main
-
-# Un hébergement qu'on retire devient une redirection vers le domaine canonique,
-# jamais un duplicata vivant.`,
     },
   ],
 };
