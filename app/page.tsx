@@ -1,69 +1,66 @@
-import Image from "next/image";
+import { Brand } from "@/components/brand";
+import { PageHero } from "@/components/page-hero";
+import { Playbook } from "@/components/playbook";
+import { colorerPiles } from "@/lib/playbook/rendu";
+import { DESCRIPTION, SOURCE, TITRE } from "@/lib/site";
 
-export default function Home() {
+export default async function Page() {
+  // Coloration au build : le navigateur ne reçoit que du HTML déjà coloré.
+  const piles = await colorerPiles();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="mx-auto flex min-h-dvh max-w-[92rem] flex-col px-4 sm:px-8">
+      <header className="flex items-center justify-between gap-4 py-5">
+        <Brand name={TITRE} logo="/mark.svg" href="/" />
+        <div className="flex items-center gap-4">
+          <p className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
+            <Touche>←</Touche>
+            <Touche>→</Touche>
+            <span>pour défiler</span>
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href={SOURCE}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noreferrer"
+            className="rounded-md text-sm text-muted-foreground underline decoration-primary/40 underline-offset-4 transition-colors outline-none hover:text-foreground hover:decoration-primary focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+            dev-standards
           </a>
         </div>
+      </header>
+
+      <main className="flex flex-1 flex-col gap-10 pt-8 pb-16">
+        <PageHero title="Une feature full‑stack, dans chaque pile" width="3xl">
+          {DESCRIPTION} Chaque écran montre{" "}
+          <span className="font-medium text-foreground">
+            le code qu'on écrirait aujourd'hui
+          </span>
+          , et le piège qui va avec.
+        </PageHero>
+
+        <Playbook piles={piles} />
       </main>
+
+      <footer className="border-t py-6 text-sm text-muted-foreground">
+        Le contenu vient des guidelines de{" "}
+        <a
+          href={SOURCE}
+          target="_blank"
+          rel="noreferrer"
+          className="underline decoration-primary/40 underline-offset-4 transition-colors hover:decoration-primary"
+        >
+          dev-standards
+        </a>
+        . Quand elles bougent, cette page bouge.
+      </footer>
     </div>
+  );
+}
+
+function Touche({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border bg-card px-1 font-mono text-[11px] text-foreground">
+      {children}
+    </kbd>
   );
 }
