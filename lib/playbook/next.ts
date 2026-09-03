@@ -12,7 +12,7 @@ const featureFullstack = {
       titre: "La route",
       intention:
         "Un dossier sous app/, un Server Component, sa metadata. Une route dynamique qui n'énumère pas ses valeurs n'est pas statique.",
-      fichier: "app/outils/[slug]/page.tsx",
+      fichier: "app/tools/[slug]/page.tsx",
       langage: "tsx",
       source: "next-guidelines.md, Playbook et §4",
       surligne: [7, 8, 9],
@@ -21,12 +21,12 @@ const featureFullstack = {
       code: `import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { Simulateur } from "@/components/simulateur";
-import { OUTILS } from "@/lib/outils";
+import { Simulator } from "@/components/simulator";
+import { TOOLS } from "@/lib/tools";
 
 // Sans cette fonction, la route dynamique n'est pas pré-rendue.
 export function generateStaticParams() {
-  return OUTILS.map((outil) => ({ slug: outil.slug }));
+  return TOOLS.map((tool) => ({ slug: tool.slug }));
 }
 
 export async function generateMetadata({
@@ -35,10 +35,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const outil = OUTILS.find((candidat) => candidat.slug === slug);
-  if (!outil) return {};
+  const tool = TOOLS.find((candidate) => candidate.slug === slug);
+  if (!tool) return {};
 
-  return { title: outil.titre, description: outil.resume };
+  return { title: tool.title, description: tool.summary };
 }
 
 export default async function Page({
@@ -47,11 +47,11 @@ export default async function Page({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const outil = OUTILS.find((candidat) => candidat.slug === slug);
-  if (!outil) notFound();
+  const tool = TOOLS.find((candidate) => candidate.slug === slug);
+  if (!tool) notFound();
 
   // Server Component : la donnée est déjà là, elle descend en props.
-  return <Simulateur bareme={outil.bareme} />;
+  return <Simulator scale={tool.scale} />;
 }`,
     },
     {
@@ -60,7 +60,7 @@ export default async function Page({
       titre: "Le pipeline de données",
       intention:
         "Une source externe entre par un script, pas par un fetch au runtime. Les logs de contrôle sont le seul filet d'un site sans suite de tests.",
-      fichier: "scripts/build-outils.mjs",
+      fichier: "scripts/build-tools.mjs",
       langage: "js",
       source: "next-guidelines.md §5",
       surligne: [27, 28, 29, 30],
@@ -71,19 +71,19 @@ import { writeFile } from "node:fs/promises";
 
 const SOURCE = "https://ourworldindata.org/grapher/co2.csv";
 
-const reponse = await fetch(SOURCE);
-if (!reponse.ok) {
-  throw new Error("Source indisponible : " + reponse.status);
+const response = await fetch(SOURCE);
+if (!response.ok) {
+  throw new Error("Source indisponible : " + response.status);
 }
 
-const lignes = (await reponse.text()).trim().split("\\n").slice(1);
-const emissions = lignes.map((ligne) => {
-  const [pays, annee, valeur] = ligne.split(",");
-  return { pays, annee: Number(annee), valeur: Number(valeur) };
+const lines = (await response.text()).trim().split("\\n").slice(1);
+const emissions = lines.map((line) => {
+  const [country, year, value] = line.split(",");
+  return { country, year: Number(year), value: Number(value) };
 });
 
-const entete = [
-  "// Généré par scripts/build-outils.mjs, ne pas éditer à la main.",
+const header = [
+  "// Généré par scripts/build-tools.mjs, ne pas éditer à la main.",
   "// Source : Our World in Data, CC BY.",
   "// Extraction : " + new Date().toISOString().slice(0, 10),
   "",
@@ -91,13 +91,13 @@ const entete = [
 
 await writeFile(
   "lib/emissions.ts",
-  entete + "export const EMISSIONS = " + JSON.stringify(emissions, null, 2) + " as const;\\n",
+  header + "export const EMISSIONS = " + JSON.stringify(emissions, null, 2) + " as const;\\n",
 );
 
 // Les logs de contrôle : le total croisé contre un agrégat connu, puis les volumes.
-const total = emissions.reduce((somme, e) => somme + e.valeur, 0);
+const total = emissions.reduce((sum, e) => sum + e.value, 0);
 console.log("Total 2023 :", total.toFixed(1), "Gt (attendu ~37,4)");
-console.log(emissions.length, "lignes,", new Set(emissions.map((e) => e.pays)).size, "pays");`,
+console.log(emissions.length, "lines,", new Set(emissions.map((e) => e.country)).size, "country");`,
     },
     {
       id: "fichier-genere",
@@ -109,13 +109,13 @@ console.log(emissions.length, "lignes,", new Set(emissions.map((e) => e.pays)).s
       langage: "ts",
       source: "next-guidelines.md §5",
       surligne: [1, 2, 3],
-      code: `// Généré par scripts/build-outils.mjs, ne pas éditer à la main.
+      code: `// Généré par scripts/build-tools.mjs, ne pas éditer à la main.
 // Source : Our World in Data, CC BY.
 // Extraction : 2026-08-31
 
 export const EMISSIONS = [
-  { pays: "France", annee: 2023, valeur: 0.302 },
-  { pays: "Allemagne", annee: 2023, valeur: 0.582 },
+  { country: "France", year: 2023, value: 0.302 },
+  { country: "Allemagne", year: 2023, value: 0.582 },
 ] as const;
 
 export type Emission = (typeof EMISSIONS)[number];`,
@@ -126,7 +126,7 @@ export type Emission = (typeof EMISSIONS)[number];`,
       titre: "La part interactive",
       intention:
         "Le composant client descend le plus bas possible dans l'arbre. Sa page reste un Server Component et lui passe la donnée cuite en props.",
-      fichier: "components/simulateur.tsx",
+      fichier: "components/simulator.tsx",
       langage: "tsx",
       source: "next-guidelines.md, Playbook · react-guidelines.md §2",
       surligne: [1, 12],
@@ -139,16 +139,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Emission } from "@/lib/emissions";
 
-export function Simulateur({ bareme }: { bareme: readonly Emission[] }) {
-  const [pays, setPays] = useState(bareme[0].pays);
+export function Simulator({ scale }: { scale: readonly Emission[] }) {
+  const [country, setCountry] = useState(scale[0].country);
 
   // Le compilateur React mémoise ce qui doit l'être : rien à annoter ici.
-  const courant = bareme.find((ligne) => ligne.pays === pays) ?? bareme[0];
+  const current = scale.find((line) => line.country === country) ?? scale[0];
 
   return (
     <div>
-      <p>{courant.valeur} Gt</p>
-      <Button onClick={() => setPays(bareme[1].pays)}>Comparer</Button>
+      <p>{current.value} Gt</p>
+      <Button onClick={() => setCountry(scale[1].country)}>Comparer</Button>
     </div>
   );
 }`,
@@ -159,7 +159,7 @@ export function Simulateur({ bareme }: { bareme: readonly Emission[] }) {
       titre: "Un onglet qui garde son état",
       intention:
         "Démonter un panneau caché lui fait perdre son état, son DOM et sa position de scroll. Activity le garde, et nettoie quand même les Effects.",
-      fichier: "components/onglets-simulateur.tsx",
+      fichier: "components/simulator-tabs.tsx",
       langage: "tsx",
       source: "next-guidelines.md, Patterns · react-guidelines.md §1",
       surligne: [10, 13],
@@ -169,16 +169,16 @@ export function Simulateur({ bareme }: { bareme: readonly Emission[] }) {
 
 import { Activity, useState } from "react";
 
-export function OngletsSimulateur() {
-  const [onglet, setOnglet] = useState<"transport" | "logement">("transport");
+export function SimulatorTabs() {
+  const [tab, setTab] = useState<"transport" | "housing">("transport");
 
   return (
     <>
-      <Activity mode={onglet === "transport" ? "visible" : "hidden"}>
-        <PanneauTransport />
+      <Activity mode={tab === "transport" ? "visible" : "hidden"}>
+        <TransportPanel />
       </Activity>
-      <Activity mode={onglet === "logement" ? "visible" : "hidden"}>
-        <PanneauLogement />
+      <Activity mode={tab === "housing" ? "visible" : "hidden"}>
+        <HousingPanel />
       </Activity>
     </>
   );
@@ -201,21 +201,21 @@ export function OngletsSimulateur() {
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 
-const schema = z.object({ id: z.string(), titre: z.string().min(1).max(120) });
+const schema = z.object({ id: z.string(), title: z.string().min(1).max(120) });
 
-export async function renommerProjet(entree: unknown) {
+export async function renameProject(input: unknown) {
   // 1. La session.
   const { userId } = await auth();
   if (!userId) throw new Error("Non authentifié");
 
   // 2. La validation de l'entrée.
-  const donnees = schema.parse(entree);
+  const data = schema.parse(input);
 
   // 3. L'autorisation sur l'objet visé, et pas seulement le fait d'être connecté.
-  const projet = await lireProjet(donnees.id);
-  if (projet.proprietaire !== userId) throw new Error("Interdit");
+  const project = await readProject(data.id);
+  if (project.owner !== userId) throw new Error("Interdit");
 
-  await renommer(donnees.id, donnees.titre);
+  await rename(data.id, data.title);
 }`,
     },
     {
@@ -275,7 +275,7 @@ export default nextConfig;`,
       surligne: [4, 5],
       code: `import { ImageResponse } from "next/og";
 
-import { DESCRIPTION, TITRE } from "@/lib/site";
+import { DESCRIPTION, TITLE } from "@/lib/site";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -295,7 +295,7 @@ export default function Image() {
           color: "#171717",
         }}
       >
-        <div style={{ fontSize: 76, fontWeight: 600 }}>{TITRE}</div>
+        <div style={{ fontSize: 76, fontWeight: 600 }}>{TITLE}</div>
         <div style={{ fontSize: 34, color: "#6b6b6b" }}>{DESCRIPTION}</div>
       </div>
     ),
@@ -365,15 +365,15 @@ export default nextConfig;
 
 import { useEffect, useEffectEvent, useState } from "react";
 
-export function Suivi({ url, theme }: { url: string; theme: string }) {
+export function Tracking({ url, theme }: { url: string; theme: string }) {
   // Lit thème sans le déclarer en dépendance : changer de thème ne relance pas la connexion.
-  const onConnecte = useEffectEvent(() => {
-    journaliser("visite", { url, theme });
+  const onConnect = useEffectEvent(() => {
+    log("visit", { url, theme });
   });
 
   useEffect(() => {
-    const socket = connecter(url);
-    socket.on("open", onConnecte);
+    const socket = connect(url);
+    socket.on("open", onConnect);
     return () => socket.close();
   }, [url]);
 
@@ -395,11 +395,11 @@ export function Suivi({ url, theme }: { url: string; theme: string }) {
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
-  return NextResponse.redirect(new URL("/accueil", request.url));
+  return NextResponse.redirect(new URL("/home", request.url));
 }
 
 export const config = {
-  matcher: "/a-propos/:path*",
+  matcher: "/about/:path*",
 };`,
     },
     {
@@ -408,7 +408,7 @@ export const config = {
       titre: "catchError, la frontière d'erreur programmatique",
       intention:
         "L'alternative à error.js, posable n'importe où dans l'arbre. retry() rejoue le rendu dans une Transition, l'état des Client Components hors de la frontière survit.",
-      fichier: "app/frontiere-erreur.tsx",
+      fichier: "app/error-boundary.tsx",
       langage: "tsx",
       source: "docs Next 16.3, next/error",
       surligne: [3, 12],
@@ -418,19 +418,19 @@ export const config = {
 
 import { catchError, type ErrorInfo } from "next/error";
 
-function Repli({ titre }: { titre: string }, { error, retry }: ErrorInfo) {
+function Fallback({ title }: { title: string }, { error, retry }: ErrorInfo) {
   return (
     <div>
-      <h2>{titre}</h2>
+      <h2>{title}</h2>
       <p>{error.message}</p>
       <button type="button" onClick={() => retry()}>
-        Reessayer
+        Réessayer
       </button>
     </div>
   );
 }
 
-export default catchError(Repli);`,
+export default catchError(Fallback);`,
     },
     {
       id: "kit",
@@ -470,13 +470,13 @@ export default catchError(Repli);`,
       source: "react-guidelines.md §3",
       surligne: [4, 7],
       code: `// Action : un vrai bouton.
-<Button variant="default" onClick={enregistrer}>Enregistrer</Button>
+<Button variant="default" onClick={save}>Enregistrer</Button>
 
 // Lien : la composition passe par render, et un vrai <a> survit.
 <Button render={<a href="/guides" />} variant="secondary">Les guides</Button>
 
 // Filtre, sélection : ce n'est ni l'un ni l'autre.
-<ToggleGroup value={filtres} onValueChange={setFiltres}>
+<ToggleGroup value={filters} onValueChange={setFilters}>
   <Toggle value="next">Next</Toggle>
 </ToggleGroup>`,
     },
@@ -501,7 +501,7 @@ const pieges = {
       piege:
         'Un secret lu dans un fichier qui s\'avère client est un secret publié. La frontière "use client" se suit de manière transitive, pas fichier par fichier.',
       code: `// Publié : prend le préfixe seulement ce qui irait sur un panneau publicitaire.
-const cle = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 // Serveur uniquement. Ce fichier ne doit être importé par aucun composant client,
 // ni directement, ni par un module qui l'est.
@@ -521,7 +521,7 @@ const secret = process.env.STRIPE_SECRET_KEY;`,
       code: `// Non.
 useEffect(() => {
   fetch("/data/emissions.json")
-    .then((reponse) => reponse.json())
+    .then((response) => response.json())
     .then(setEmissions);
 }, []);
 
@@ -545,11 +545,11 @@ import { EMISSIONS } from "@/lib/emissions";
       code: `# Le manque se corrige dans le kit, puis se propage.
 /propagate-kit
 
-# Un composant spécifique au projet vit à la racine de components/,
+# Un composant spécifique au project vit à la racine de components/,
 # jamais dans components/ui/.
 components/
   ui/            # le kit, jamais édité ici
-  deck.tsx       # propre au projet
+  deck.tsx       # propre au project
   code-block.tsx`,
     },
     {
@@ -562,13 +562,13 @@ components/
       source: "next-guidelines.md §6 bis · react-guidelines.md §4",
       surligne: [2, 5],
       code: `// Non : le contenu vient du CMS.
-<div dangerouslySetInnerHTML={{ __html: article.corps }} />
+<div dangerouslySetInnerHTML={{ __html: article.body }} />
 
 // Non plus : une URL javascript: est une exécution.
-<a href={lien.url}>{lien.libelle}</a>
+<a href={link.url}>{link.label}</a>
 
 // Le href se valide avant d'être posé.
-const sur = /^https?:\\/\\//.test(lien.url) ? lien.url : "#";`,
+const safe = /^https?:\\/\\//.test(link.url) ? link.url : "#";`,
     },
   ],
 };

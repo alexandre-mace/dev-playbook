@@ -12,7 +12,7 @@ const featureFullstack = {
       titre: "Modéliser le contrat backend",
       intention:
         "PHP est la source de vérité. Les types et la validation vivent sur l'entité, et tout le reste en découle.",
-      fichier: "src/Entity/AlerteRecherche.php",
+      fichier: "src/Entity/SearchAlert.php",
       langage: "php",
       source: "symfony-guidelines.md, Playbook 1 · reactony.md §2",
       surligne: [7, 8, 9],
@@ -20,7 +20,7 @@ const featureFullstack = {
         "Charge utile 1:1 avec l'entité : l'entité directement. Sous-ensemble d'une grosse entité : un DTO allowlist plus ObjectMapper, pour la sécurité. Rien qui corresponde à une entité : un DTO simple.",
       code: `<?php
 
-class AlerteRecherche
+class SearchAlert
 {
     #[ORM\\Id]
     #[ORM\\GeneratedValue(strategy: 'IDENTITY')]
@@ -29,11 +29,11 @@ class AlerteRecherche
 
     #[Assert\\NotBlank]
     #[Assert\\Count(min: 1)]
-    #[Groups(['alerte:read', 'alerte:create'])]
-    public array $canaux = [];
+    #[Groups(['search_alert:read', 'search_alert:create'])]
+    public array $channels = [];
 
     #[Assert\\Email]
-    #[Groups(['alerte:create'])]
+    #[Groups(['search_alert:create'])]
     public ?string $email = null;
 }`,
     },
@@ -43,7 +43,7 @@ class AlerteRecherche
       titre: "La route du contrôleur",
       intention:
         "format: 'json' est obligatoire, #[IsGranted] aussi. Le contrôleur oriente : Domain décide, Service exécute.",
-      fichier: "src/Controller/AlerteController.php",
+      fichier: "src/Controller/SearchAlertController.php",
       langage: "php",
       source: "symfony-guidelines.md §3 · Playbook 2",
       surligne: [5, 6, 7],
@@ -51,18 +51,18 @@ class AlerteRecherche
         "Sans format: 'json', les erreurs 422 arrivent en HTML et le frontend ne sait plus les parser. Et un docblock en prose fuit dans le summary OpenAPI, donc dans le JSDoc du SDK : le garder en tags seulement.",
       code: `<?php
 
-/** @return array<int, AlerteRecherche> */
+/** @return array<int, SearchAlert> */
 #[IsGranted('ROLE_USER')]
-#[Route('/api/alertes', methods: ['POST'], format: 'json')]
-#[Serialize(code: 201, context: ['groups' => ['alerte:read']])]
+#[Route('/api/search-alerts', methods: ['POST'], format: 'json')]
+#[Serialize(code: 201, context: ['groups' => ['search_alert:read']])]
 public function create(
-    #[MapRequestPayload] AlerteRecherche $alerte,
-): AlerteRecherche {
+    #[MapRequestPayload] SearchAlert $searchAlert,
+): SearchAlert {
     // CRUD simple : l'EntityManager directement dans le contrôleur.
-    $this->entityManager->persist($alerte);
+    $this->entityManager->persist($searchAlert);
     $this->entityManager->flush();
 
-    return $alerte;
+    return $searchAlert;
 }`,
     },
     {
@@ -104,17 +104,17 @@ public function create(
 //     sdk.gen.ts     une fonction typée par endpoint, multipart compris
 //     ...            les queryOptions et mutationOptions du plugin TanStack Query
 
-import { getAlerteListOptions, postAlerte } from "@/lib/api";
-import { zAlerteRecherche } from "@/lib/api/zod.gen";
+import { getSearchAlertListOptions, postSearchAlert } from "@/lib/api";
+import { zSearchAlert } from "@/lib/api/zod.gen";
 
 // Lire : les options générées portent déjà la queryKey et le queryFn.
-const { data } = useQuery({ ...getAlerteListOptions({ query: filtres }) });
+const { data } = useQuery({ ...getSearchAlertListOptions({ query: filters }) });
 
 // Valider : le schéma descend des contraintes PHP, il ne se réécrit pas ici.
-const form = useForm({ resolver: zodResolver(zAlerteRecherche) });
+const form = useForm({ resolver: zodResolver(zSearchAlert) });
 
 // Écrire : une fonction par endpoint, typée sur le corps attendu.
-await postAlerte({ body: valeurs });`,
+await postSearchAlert({ body: values });`,
     },
     {
       id: "formulaire",
@@ -122,7 +122,7 @@ await postAlerte({ body: valeurs });`,
       titre: "Le composant React",
       intention:
         "Un seul patron de formulaire : Controller de RHF, la famille Field de shadcn, le Zod généré, useMutation. Le 422 revient champ par champ.",
-      fichier: "assets/components/alerte-form.tsx",
+      fichier: "assets/components/search-alert-form.tsx",
       langage: "tsx",
       source: "reactony.md §4 · §3",
       surligne: [9, 15, 16, 17],
@@ -132,24 +132,24 @@ await postAlerte({ body: valeurs });`,
 import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 
-import { postAlerte } from "@/lib/api";
-import { zAlerteRecherche } from "@/lib/api/zod.gen"; // généré
+import { postSearchAlert } from "@/lib/api";
+import { zSearchAlert } from "@/lib/api/zod.gen"; // généré
 import { handleSdkError } from "@/lib/parseViolations";
 
-type FormValues = z.infer<typeof zAlerteRecherche>;
+type FormValues = z.infer<typeof zSearchAlert>;
 
 const form = useForm<FormValues>({
-  resolver: zodResolver(zAlerteRecherche),
-  defaultValues: { canaux: [], email: "" },
+  resolver: zodResolver(zSearchAlert),
+  defaultValues: { channels: [], email: "" },
 });
 
 const mutation = useMutation({
   mutationFn: async (values: FormValues) => {
-    const resultat = await postAlerte({ body: values });
-    const erreurs = handleSdkError(resultat);
-    if (erreurs) {
-      Object.entries(erreurs).forEach(([champ, message]) =>
-        form.setError(champ as any, { message }),
+    const result = await postSearchAlert({ body: values });
+    const errors = handleSdkError(result);
+    if (errors) {
+      Object.entries(errors).forEach(([field, message]) =>
+        form.setError(field as any, { message }),
       );
       throw new Error("Validation failed");
     }
@@ -157,7 +157,7 @@ const mutation = useMutation({
 });
 
 <Controller
-  name="canaux"
+  name="channels"
   control={form.control}
   render={({ field, fieldState }) => (
     <Field data-invalid={fieldState.invalid}>
@@ -180,13 +180,13 @@ const mutation = useMutation({
       code: `import { toast } from "sonner";
 
 const mutation = useMutation({
-  mutationFn: async (donnees: { id: string; valeur: string }) => {
-    const resultat = await postFieldUpdate({ body: donnees });
-    const erreurs = handleSdkError(resultat);
-    if (erreurs) throw new Error(Object.values(erreurs)[0]);
+  mutationFn: async (data: { id: string; value: string }) => {
+    const result = await postFieldUpdate({ body: data });
+    const errors = handleSdkError(result);
+    if (errors) throw new Error(Object.values(errors)[0]);
   },
-  onSuccess: () => toast.success("Enregistre"),
-  onError: (erreur: Error) => toast.error(erreur.message),
+  onSuccess: () => toast.success("Enregistré"),
+  onError: (error: Error) => toast.error(error.message),
 });`,
     },
     {
@@ -198,14 +198,14 @@ const mutation = useMutation({
       langage: "tsx",
       source: "reactony.md §4 · Playbook 5",
       surligne: [6, 7],
-      code: `import { getAlerteListOptions } from "@/lib/api";
+      code: `import { getSearchAlertListOptions } from "@/lib/api";
 
 const queryClient = useQueryClient();
 
 const mutation = useMutation({
-  mutationFn: postAlerte,
+  mutationFn: postSearchAlert,
   onSuccess: () =>
-    queryClient.invalidateQueries({ ...getAlerteListOptions({ query: filtres }) }),
+    queryClient.invalidateQueries({ ...getSearchAlertListOptions({ query: filters }) }),
 });`,
     },
     {
@@ -214,7 +214,7 @@ const mutation = useMutation({
       titre: "Les tests dus",
       intention:
         "Ce qu'une nouvelle route et un nouveau parcours doivent, par rendement décroissant.",
-      fichier: "tests/Functional/AlerteControllerTest.php",
+      fichier: "tests/Functional/SearchAlertControllerTest.php",
       langage: "php",
       source: "symfony-guidelines.md, Playbook 6 · §13",
       surligne: [9, 14],
@@ -222,17 +222,17 @@ const mutation = useMutation({
         "Le calcul d'argent (frais, paliers, tranches) part avec un test basé sur les propriétés, via Eris : les cas limites d'arrondi ne se trouvent pas à la main.",
       code: `<?php
 
-public function testCreationAlerte(): void
+public function testCreateSearchAlert(): void
 {
     $client = static::createClient();
     $client->loginUser(UserFactory::createOne()->_real());
 
     // Le contrat HTTP.
-    $client->jsonRequest('POST', '/api/alertes', ['canaux' => ['email']]);
+    $client->jsonRequest('POST', '/api/search-alerts', ['channels' => ['email']]);
     self::assertResponseStatusCodeSame(201);
 
     // Et l'état en base : les deux, pas l'un ou l'autre.
-    AlerteRechercheFactory::assert()->count(1);
+    SearchAlertFactory::assert()->count(1);
 }
 
 // Fonctionnel PHPUnit pour toute nouvelle route /api/ non triviale.
@@ -300,9 +300,9 @@ public function getModelSaves(): array
 
 #[Route('/api/farms', methods: ['GET'], format: 'json')]
 public function list(
-    #[MapQueryString] FarmFilterDto $filtres = new FarmFilterDto(),
+    #[MapQueryString] FarmFilterDto $filters = new FarmFilterDto(),
 ): JsonResponse {
-    return $this->json($this->farmRepository->findByFilters($filtres));
+    return $this->json($this->farmRepository->findByFilters($filters));
 }`,
     },
     {
@@ -316,17 +316,17 @@ public function list(
       surligne: [3, 5],
       code: `<?php
 
-#[Map(target: Profil::class)]
-final class ProfilPartielDto
+#[Map(target: Profile::class)]
+final class PartialProfileDto
 {
     #[Assert\\Length(max: 120)]
     public ?string $bio = null;
 
     #[Assert\\NotBlank]
-    public string $ville = '';
+    public string $city = '';
 }
 
-// Dans le contrôleur : $this->objectMapper->map($dto, $profil);
+// Dans le contrôleur : $this->objectMapper->map($dto, $profile);
 // Ce qui n'est pas dans le DTO ne peut pas être écrit, même envoyé.`,
     },
     {
@@ -342,7 +342,7 @@ final class ProfilPartielDto
         "Côté frontend, garder file.size aligné sur maxSize : au-delà de upload_max_filesize, le SAPI PHP jette silencieusement, le résolveur rend un 422 vide et le toast reste muet.",
       code: `<?php
 
-final class ImageProjetDto
+final class ProjectImageDto
 {
     #[Assert\\NotNull]
     #[Assert\\File(maxSize: '8M', mimeTypes: ['image/jpeg', 'image/png'])]
@@ -350,8 +350,8 @@ final class ImageProjetDto
 }
 
 #[IsGranted('ROLE_USER')]
-#[Route('/api/projets/{id}/image', methods: ['POST'], format: 'json')]
-public function upload(string $id, #[MapRequestPayload] ImageProjetDto $dto): Response
+#[Route('/api/projects/{id}/image', methods: ['POST'], format: 'json')]
+public function upload(string $id, #[MapRequestPayload] ProjectImageDto $dto): Response
 {
     // Le SDK généré gère le multipart via formDataBodySerializer : rien à assembler à la main.
 }`,
@@ -382,9 +382,9 @@ public function upload(string $id, #[MapRequestPayload] ImageProjetDto $dto): Re
       code: `<?php
 
 // Une factory dit l'intention du test, pas la forme de la table.
-$alerte = AlerteRechercheFactory::createOne(['canaux' => ['email']]);
+$searchAlert = SearchAlertFactory::createOne(['channels' => ['email']]);
 
-AlerteRechercheFactory::createMany(3, ['canaux' => ['sms']]);
+SearchAlertFactory::createMany(3, ['channels' => ['sms']]);
 
 // DAMA Doctrine Test Bundle enveloppe chaque test dans une transaction
 // et la rejette à la fin : pas de nettoyage à écrire, pas de fuite entre tests.`,
@@ -409,14 +409,14 @@ const pieges = {
       surligne: [2, 3, 4, 7],
       code: `// Non.
 useEffect(() => {
-  fetch("/api/alertes").then((r) => r.json()).then(setAlertes);
+  fetch("/api/search-alerts").then((r) => r.json()).then(setSearchAlerts);
 }, []);
 
 // Non plus : un fetch nu contourne le SDK généré.
-const reponse = await fetch("/api/alertes", { method: "POST" });
+const response = await fetch("/api/search-alerts", { method: "POST" });
 
 // Oui.
-const { data } = useQuery({ ...getAlerteListOptions({ query: filtres }) });`,
+const { data } = useQuery({ ...getSearchAlertListOptions({ query: filters }) });`,
     },
     {
       id: "422",
@@ -428,17 +428,17 @@ const { data } = useQuery({ ...getAlerteListOptions({ query: filtres }) });`,
       source: "reactony.md §10 · §3",
       surligne: [2, 3],
       code: `// Non.
-const mutation = useMutation({ mutationFn: postAlerte });
+const mutation = useMutation({ mutationFn: postSearchAlert });
 
 // Oui : les violations remontent champ par champ.
-const erreurs = handleSdkError(resultat);
-if (erreurs) {
-  Object.entries(erreurs).forEach(([champ, message]) =>
-    form.setError(champ as any, { message }),
+const errors = handleSdkError(result);
+if (errors) {
+  Object.entries(errors).forEach(([field, message]) =>
+    form.setError(field as any, { message }),
   );
 }
 
-// form.setError(champ as any, ...) est le seul any toléré du projet :
+// form.setError(field as any, ...) est le seul any toléré du projet :
 // c'est le contournement documenté du typage de Object.entries avec RHF.`,
     },
     {
@@ -453,7 +453,7 @@ if (erreurs) {
       piege:
         'Une tolérance : un comportement DOM sans état, sous une trentaine de lignes, un copier-dans-le-presse-papier par exemple, où un îlot serait disproportionné. Et réactiver Turbo Drive sans décision explicite remonte les îlots React et leur fait perdre leur état. Le site est délibérément en data-turbo="false".',
       code: `{# Le montage, et rien d'autre. #}
-<div {{ react_component('AlerteForm', {
+<div {{ react_component('SearchAlertForm', {
     farm: farm|serialize('json', { groups: ['farm:read'] }),
 }) }}></div>`,
     },
@@ -471,9 +471,9 @@ if (erreurs) {
       code: `<?php
 
 return $this->createQueryBuilder('a')
-    ->andWhere('a.actif = true')
+    ->andWhere('a.active = true')
     // Sans cette ligne, l'ordre dépend du plan d'exécution.
-    ->orderBy('a.creeLe', 'DESC')
+    ->orderBy('a.createdAt', 'DESC')
     ->addOrderBy('a.id', 'DESC') // départage, pour rendre l'ordre total
     ->getQuery()
     ->getResult();`,
