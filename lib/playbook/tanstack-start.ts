@@ -12,29 +12,29 @@ const featureFullstack = {
       titre: "L'écran et ses search params typés",
       intention:
         "Le schéma vit sur la route, donc les lectures et les liens sont vérifiés à la compilation. Renommer un champ casse le build de chaque lien qui l'utilisait.",
-      fichier: "src/routes/products.tsx",
+      fichier: "src/routes/tasks.tsx",
       langage: "tsx",
       source: "tanstack-start-guidelines.md, Patterns",
-      surligne: [6, 7, 8, 9],
+      surligne: [5, 6, 7],
       piege:
         "Un filtre, un onglet ou une pagination qu'un utilisateur voudrait partager en lien n'a rien à faire dans un useState. Il étend le schéma Zod de la route.",
       code: `import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 
-export const Route = createFileRoute("/products")({
+export const Route = createFileRoute("/tasks")({
   validateSearch: z.object({
+    status: z.enum(["all", "todo", "done"]).default("all"),
     page: z.number().default(1),
-    sort: z.enum(["recent", "price"]).default("recent"),
   }),
-  component: Products,
+  component: Tasks,
 });
 
-function Products() {
-  const { page, sort } = Route.useSearch();
+function Tasks() {
+  const { status } = Route.useSearch();
 
   return (
-    <Link from={Route.fullPath} search={(prev) => ({ ...prev, page: prev.page + 1 })}>
-      Page suivante
+    <Link from={Route.fullPath} search={(prev) => ({ ...prev, status: "done", page: 1 })}>
+      Faites
     </Link>
   );
 }`,
@@ -45,19 +45,19 @@ function Products() {
       titre: "Le loader alimente le cache Query",
       intention:
         "La route rend depuis le cache puis revalide, au lieu de bloquer sur une cascade de requêtes lancées dans les composants.",
-      fichier: "src/routes/products.tsx",
+      fichier: "src/routes/tasks.tsx",
       langage: "tsx",
       source: "tanstack-start-guidelines.md, Patterns · §2",
-      surligne: [6, 7],
+      surligne: [6, 8],
       code: `import { convexQuery } from "@convex-dev/react-query";
 
 import { api } from "../../convex/_generated/api";
 
-export const Route = createFileRoute("/products")({
+export const Route = createFileRoute("/tasks")({
+  loaderDeps: ({ search }) => ({ status: search.status }),
   loader: ({ context, deps }) =>
-    context.queryClient.ensureQueryData(convexQuery(api.products.list, deps)),
-  loaderDeps: ({ search }) => ({ page: search.page, sort: search.sort }),
-  component: Products,
+    context.queryClient.ensureQueryData(convexQuery(api.tasks.listMine, deps)),
+  component: Tasks,
 });`,
     },
     {
@@ -77,7 +77,7 @@ export default defineSchema({
   tasks: defineTable({
     title: v.string(),
     done: v.boolean(),
-    ownerId: v.id("users"),
+    ownerId: v.string(), // identity.tokenIdentifier du propriétaire
     internalNote: v.optional(v.string()),
   }).index("by_owner", ["ownerId"]),
 });`,
@@ -118,11 +118,11 @@ useSuspenseQuery(convexQuery(api.tasks.list, {}));`,
       rang: "4",
       titre: "La query lit, la mutation écrit",
       intention:
-        "Session, puis autorisation sur le document, puis validation des arguments. Une identité n'est pas une autorisation.",
+        "Les arguments sont validés par args avant même le handler. Le handler vérifie ensuite la session, puis l'autorisation sur le document visé : une identité n'est pas une autorisation.",
       fichier: "convex/tasks.ts",
       langage: "ts",
       source: "tanstack-start-guidelines.md §3 · §3 bis",
-      surligne: [8, 9, 14, 22, 23],
+      surligne: [8, 14, 27, 31],
       piege:
         "Convex renvoie ce que la fonction retourne : rendre le document entier le publie entier. On sélectionne les champs. Ce qui n'est pas destiné au client se déclare internalQuery ou internalMutation.",
       code: `import { v } from "convex/values";
@@ -130,18 +130,21 @@ useSuspenseQuery(convexQuery(api.tasks.list, {}));`,
 import { mutation, query } from "./_generated/server";
 
 export const listMine = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { status: v.union(v.literal("all"), v.literal("todo"), v.literal("done")) },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Non authentifié");
 
+    // Le propriétaire vient de la session, jamais des arguments.
     const tasks = await ctx.db
       .query("tasks")
-      .withIndex("by_owner", (q) => q.eq("ownerId", identity.subject))
+      .withIndex("by_owner", (q) => q.eq("ownerId", identity.tokenIdentifier))
       .collect();
 
     // On sélectionne : internalNote ne traverse pas.
-    return tasks.map(({ _id, title, done }) => ({ _id, title, done }));
+    return tasks
+      .filter((t) => args.status === "all" || t.done === (args.status === "done"))
+      .map(({ _id, title, done }) => ({ _id, title, done }));
   },
 });
 
@@ -152,7 +155,7 @@ export const markDone = mutation({
     if (!identity) throw new Error("Non authentifié");
 
     const task = await ctx.db.get(args.id);
-    if (task?.ownerId !== identity.subject) throw new Error("Interdit");
+    if (task?.ownerId !== identity.tokenIdentifier) throw new Error("Interdit");
 
     await ctx.db.patch(args.id, { done: args.done });
   },
@@ -197,7 +200,7 @@ convexQueryClient.connect(queryClient);
       fichier: "src/routes/tasks.tsx",
       langage: "tsx",
       source: "tanstack-start-guidelines.md §3",
-      surligne: [7, 10, 11],
+      surligne: [8, 11],
       piege:
         "Les abonnements survivent 5 minutes après le démontage (gcTime). Baisser cette valeur est une décision, pas un accident.",
       code: `import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
@@ -206,7 +209,8 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { api } from "../../convex/_generated/api";
 
 function Tasks() {
-  const { data } = useSuspenseQuery(convexQuery(api.tasks.listMine, {}));
+  const { status } = Route.useSearch();
+  const { data } = useSuspenseQuery(convexQuery(api.tasks.listMine, { status }));
 
   const toggle = useMutation({
     mutationFn: useConvexMutation(api.tasks.markDone),
@@ -226,36 +230,48 @@ function Tasks() {
     {
       id: "formulaire",
       rang: "7",
-      titre: "Le formulaire, avec le même Zod que le serveur",
+      titre: "Le formulaire, avec le même Zod que la mutation",
       intention:
-        "TanStack Form côté client, le même schéma au bord de la mutation. On valide au bord, une fois, et le type inféré descend de là.",
-      fichier: "src/routes/tasks.new.tsx",
+        "TanStack Form côté client, et la mutation Convex valide avec le même schéma Zod grâce à convex-helpers. On valide au bord, une fois, et le type inféré descend de là.",
+      fichier: "convex/schemas.ts, convex/tasks.ts, src/routes/tasks.new.tsx",
       langage: "tsx",
       source: "tanstack-start-guidelines.md, Playbook · §2",
-      surligne: [5, 11],
-      code: `import { useForm } from "@tanstack/react-form";
-import { z } from "zod";
-
-// Le même schéma sert au formulaire et à la fonction serveur.
+      surligne: [2, 7, 20],
+      code: `// convex/schemas.ts : du Zod pur, importé des deux côtés.
 export const taskSchema = z.object({ title: z.string().min(1).max(120) });
 
+// convex/tasks.ts : la mutation valide avec ce même schéma.
+const zMutation = zCustomMutation(mutation, NoOp); // convex-helpers/server/zod4
+export const create = zMutation({
+  args: taskSchema.shape,
+  handler: async (ctx, { title }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Non authentifié");
+    await ctx.db.insert("tasks", { title, done: false, ownerId: identity.tokenIdentifier });
+  },
+});
+
+// src/routes/tasks.new.tsx : le formulaire valide avec le même schéma.
 function NewTask() {
+  const create = useMutation({ mutationFn: useConvexMutation(api.tasks.create) });
   const form = useForm({
     defaultValues: { title: "" },
     validators: { onChange: taskSchema },
-    onSubmit: ({ value }) => create({ data: value }),
+    onSubmit: ({ value }) => create.mutateAsync(value),
   });
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit(); }}>
       <form.Field name="title">
         {(field) => (
-          <input
-            value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
-          />
+          <>
+            <label htmlFor={field.name}>Titre</label>
+            <input id={field.name} value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)} />
+          </>
         )}
       </form.Field>
+      <button type="submit">Créer</button>
     </form>
   );
 }`,
@@ -306,7 +322,7 @@ export const generateInvoice = createServerFn({ method: "POST" })
       fichier: "e2e/tasks.spec.ts",
       langage: "ts",
       source: "tanstack-start-guidelines.md §5",
-      surligne: [10, 11],
+      surligne: [11, 12],
       piege:
         "Aucun test unitaire ne voit une régression de mémoisation : Vitest tourne sans le plugin compilateur. Seul un test sur un vrai build la voit.",
       code: `import { expect, test } from "@playwright/test";
@@ -319,7 +335,7 @@ test("créer une tâche, la cocher, la retrouver filtrée", async ({ page }) => 
   await expect(page.getByText("Relire le playbook")).toBeVisible();
 
   // L'état d'écran vit dans l'URL : le filtre se vérifie là.
-  await page.getByRole("button", { name: "Faites" }).click();
+  await page.getByRole("link", { name: "Faites" }).click();
   await expect(page).toHaveURL(/status=done/);
 });`,
     },
@@ -429,7 +445,7 @@ export const Route = createFileRoute("/_authenticated")({
 const useStore = create((set) => ({ tasks: [], setTasks: (t) => set({ tasks: t }) }));
 
 // Oui : Query pour le serveur.
-const { data } = useSuspenseQuery(convexQuery(api.tasks.listMine, {}));
+const { data } = useSuspenseQuery(convexQuery(api.tasks.listMine, { status: "all" }));
 
 // Zustand pour ce qui est client et global : un thème, une sidebar, un assistant en cours.`,
     },
