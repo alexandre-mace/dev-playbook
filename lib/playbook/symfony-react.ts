@@ -38,6 +38,23 @@ class SearchAlert
 }`,
     },
     {
+      id: "schema",
+      rang: "1 bis",
+      titre: "Le schéma suit l'entité",
+      intention:
+        "Pas de migration écrite à la main : le hook de déploiement applique le schéma. On relit donc le SQL qu'il va jouer avant de commiter.",
+      langage: "bash",
+      source: "symfony-guidelines.md, Playbook 1 · §19",
+      surligne: [2],
+      piege:
+        "Une colonne qui se durcit (non nullable, unique) sur des lignes existantes fait échouer la mise à jour, donc le déploiement. La commande de back-fill se branche dans le hook, au-dessus de la ligne du schéma.",
+      code: `# Le SQL que le déploiement va jouer, à lire avant de commiter :
+php bin/console doctrine:schema:update --dump-sql
+
+# Et le mapping reste cohérent avec la base :
+php bin/console doctrine:schema:validate --skip-sync`,
+    },
+    {
       id: "route",
       rang: "2",
       titre: "La route du contrôleur",
@@ -46,12 +63,11 @@ class SearchAlert
       fichier: "src/Controller/SearchAlertController.php",
       langage: "php",
       source: "symfony-guidelines.md §3 · Playbook 2",
-      surligne: [5, 6, 7],
+      surligne: [3, 4, 5],
       piege:
         "Sans format: 'json', les erreurs 422 arrivent en HTML et le frontend ne sait plus les parser. Et un docblock en prose fuit dans le summary OpenAPI, donc dans le JSDoc du SDK : le garder en tags seulement.",
       code: `<?php
 
-/** @return array<int, SearchAlert> */
 #[IsGranted('ROLE_USER')]
 #[Route('/api/search-alerts', methods: ['POST'], format: 'json')]
 #[Serialize(code: 201, context: ['groups' => ['search_alert:read']])]
@@ -63,6 +79,37 @@ public function create(
     $this->entityManager->flush();
 
     return $searchAlert;
+}`,
+    },
+    {
+      id: "regle",
+      rang: "2 bis",
+      titre: "La règle métier vit dans Domain",
+      intention:
+        "Dès qu'il y a une décision (un seuil, une éligibilité, un calcul), elle sort du contrôleur. Domain décide sans rien connaître d'extérieur, Service exécute, le contrôleur relie les deux.",
+      fichier: "src/Domain/SearchAlert/SearchAlertRules.php",
+      langage: "php",
+      source: "symfony-guidelines.md, Principes · §2 · §15",
+      surligne: [7, 8, 16],
+      piege:
+        "Un Domain qui injecte l'EntityManager ou un client HTTP n'est plus un Domain : il ne se teste plus sans mocks. La règle reçoit des valeurs, elle rend une décision.",
+      code: `<?php
+
+final class SearchAlertRules
+{
+    private const MAX_ALERTS_PER_USER = 10;
+
+    public function canCreate(int $existingAlerts): bool
+    {
+        return $existingAlerts < self::MAX_ALERTS_PER_USER;
+    }
+}
+
+// Dans le contrôleur : le Domain décide, puis on exécute.
+$count = $this->searchAlertRepository->countFor($this->getUser());
+
+if (!$this->rules->canCreate($count)) {
+    throw new UnprocessableEntityHttpException("Nombre maximal d'alertes atteint.");
 }`,
     },
     {
@@ -117,8 +164,33 @@ const form = useForm({ resolver: zodResolver(zSearchAlert) });
 await postSearchAlert({ body: values });`,
     },
     {
-      id: "formulaire",
+      id: "montage",
       rang: "4",
+      titre: "Le montage dans la page Twig",
+      intention:
+        "Twig rend la page, React ne prend que l'îlot interactif. Les données initiales descendent en props, sérialisées avec les mêmes groupes que l'API.",
+      fichier: "templates/search_alert/index.html.twig",
+      langage: "twig",
+      source: "symfony-guidelines.md, Playbook 4 · reactony.md §6",
+      surligne: [4, 5, 6],
+      piege:
+        "Chaque îlot est enveloppé une fois dans un AppProviders (QueryClientProvider et Toaster) : sans lui, le premier useMutation plante au rendu, et le toast ne s'affiche nulle part.",
+      code: `{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div {{ react_component('SearchAlertForm', {
+        farm: farm|serialize('json', { groups: ['farm:read'] }),
+    }) }}></div>
+{% endblock %}
+
+{# assets/react/controllers/SearchAlertForm.tsx :
+   export default function (props) {
+     return <AppProviders><SearchAlertForm {...props} /></AppProviders>;
+   } #}`,
+    },
+    {
+      id: "formulaire",
+      rang: "5",
       titre: "Le composant React",
       intention:
         "Un seul patron de formulaire : Controller de RHF, la famille Field de shadcn, le Zod généré, useMutation. Le 422 revient champ par champ.",
@@ -170,7 +242,7 @@ const mutation = useMutation({
     },
     {
       id: "action-simple",
-      rang: "4 bis",
+      rang: "5 bis",
       titre: "Action simple, édition en ligne",
       intention:
         "Un seul champ, un toggle, un date picker : RHF est de trop. useMutation, le SDK, handleSdkError, un toast.",
@@ -191,7 +263,7 @@ const mutation = useMutation({
     },
     {
       id: "cache",
-      rang: "5",
+      rang: "6",
       titre: "Invalider le cache",
       intention:
         "Toute mutation qui change une donnée lue ailleurs invalide, dans son onSuccess, avec les mêmes queryOptions générées.",
@@ -210,7 +282,7 @@ const mutation = useMutation({
     },
     {
       id: "tests",
-      rang: "6",
+      rang: "7",
       titre: "Les tests dus",
       intention:
         "Ce qu'une nouvelle route et un nouveau parcours doivent, par rendement décroissant.",
@@ -242,7 +314,7 @@ public function testCreateSearchAlert(): void
     },
     {
       id: "dod",
-      rang: "7",
+      rang: "8",
       titre: "Definition of Done",
       intention: "La feature est finie quand toutes ces lignes sont vertes.",
       langage: "md",
@@ -255,7 +327,8 @@ public function testCreateSearchAlert(): void
 - [ ] Un test basé sur les propriétés (Eris) sur tout nouveau calcul d'argent
 - [ ] Un spec Playwright par nouveau parcours utilisateur
 - [ ] /live-test joue : chemin nominal plus un cas limite, console et réseau propres
-- [ ] \`#[IsGranted]\` et \`format: 'json'\` présents sur les nouvelles routes /api/`,
+- [ ] \`#[IsGranted]\` et \`format: 'json'\` présents sur les nouvelles routes /api/
+- [ ] Aucun anti-pattern de la liste : \`useEffect\` + fetch, \`$request->get()\`, \`new RetryableHttpClient\`, \`any\` hors du \`setError\` de RHF`,
     },
   ],
 };
@@ -288,6 +361,29 @@ public function getModelSaves(): array
 }`,
     },
     {
+      id: "php85",
+      rang: "PHP 8.5",
+      titre: "Le pipe et le clone avec modifications",
+      intention:
+        "Le runtime et le plancher composer.json sont en 8.5 : sa syntaxe est la norme, et PHP-CS-Fixer y réécrit le code avec @PHP85Migration.",
+      langage: "php",
+      source: "symfony-guidelines.md, PHP 8.5",
+      surligne: [4, 7],
+      piege:
+        "Un projet dont le composer.json dit encore >= 8.4 ne tient pas sa promesse dès qu'une ligne utilise |> : c'est un écart pour /gap-code, pas une tolérance.",
+      code: `<?php
+
+// Le pipe : la valeur traverse les fonctions dans l'ordre de lecture.
+$slug = $title |> trim(...) |> strtolower(...);
+
+// Un wither sur un objet readonly, sans constructeur recopié à la main.
+$published = clone($draft, ['status' => Status::Published]);
+
+// Une méthode dont on ne doit pas ignorer le retour.
+#[\\NoDiscard]
+public function withPrice(Money $price): static { /* ... */ }`,
+    },
+    {
       id: "filtres",
       rang: "Lecture",
       titre: "Les filtres GET passent par un DTO",
@@ -295,14 +391,16 @@ public function getModelSaves(): array
         "Le seul cas où un DTO se justifie d'office : des filtres ne sont pas une entité.",
       langage: "php",
       source: "reactony.md §1 · symfony-guidelines.md §4",
-      surligne: [4],
+      surligne: [5, 7],
       code: `<?php
 
+/** @return array<int, Farm> */
 #[Route('/api/farms', methods: ['GET'], format: 'json')]
+#[Serialize(context: ['groups' => ['farm:read']])]
 public function list(
     #[MapQueryString] FarmFilterDto $filters = new FarmFilterDto(),
-): JsonResponse {
-    return $this->json($this->farmRepository->findByFilters($filters));
+): array {
+    return $this->farmRepository->findByFilters($filters);
 }`,
     },
     {
