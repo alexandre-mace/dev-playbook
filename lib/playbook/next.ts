@@ -189,7 +189,7 @@ export function SimulatorTabs() {
       rang: "6",
       titre: "La server action, si le site a un backend",
       intention:
-        "Elle compile en route POST publique. Session, puis autorisation sur l'objet visé, puis validation de l'entrée, dans cet ordre.",
+        "Elle compile en route POST publique. Session, puis validation de l'entrée, puis autorisation sur l'objet que l'entrée désigne, dans cet ordre : on ne vérifie pas les droits sur un identifiant qu'on n'a pas encore validé.",
       fichier: "app/actions.ts",
       langage: "ts",
       source: "next-guidelines.md §6 bis",
@@ -445,7 +445,7 @@ export default catchError(Fallback);`,
         "shadcn add theme ne réécrit pas un globals.css déjà configuré : chaque nouveau token se pose à la main, la valeur dans :root et la correspondance --color-x dans @theme inline.",
       code: `{
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "base-nova",
+  "style": "base-vega",
   "rsc": true,
   "tsx": true,
   "tailwind": {
@@ -469,11 +469,13 @@ export default catchError(Fallback);`,
       langage: "tsx",
       source: "react-guidelines.md §3",
       surligne: [4, 7],
+      piege:
+        "Button render={<a />} semble marcher, mais Base UI réserve Button aux boutons : il avertit, et nativeButton={false}, qui fait taire l'avertissement, pose role=\"button\" sur le lien. Un lecteur d'écran annonce alors un bouton.",
       code: `// Action : un vrai bouton.
 <Button variant="default" onClick={save}>Enregistrer</Button>
 
-// Lien : la composition passe par render, et un vrai <a> survit.
-<Button render={<a href="/guides" />} variant="secondary">Les guides</Button>
+// Lien : ButtonLink, un vrai <a> avec l'allure d'un bouton, défini à côté de Button.
+<ButtonLink href="/guides" variant="secondary">Les guides</ButtonLink>
 
 // Filtre, sélection : ce n'est ni l'un ni l'autre.
 <ToggleGroup value={filters} onValueChange={setFilters}>
