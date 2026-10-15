@@ -452,23 +452,27 @@ const { data } = useSuspenseQuery(convexQuery(api.tasks.listMine, { status: "all
     {
       id: "table",
       rank: "Compilateur",
-      title: "Ne jamais passer une instance de librairie en prop",
+      title: "Lire l'état de la table depuis un composant imbriqué",
       intent:
-        "useReactTable rend un objet stable dont il mute les entrailles. L'enfant qui le reçoit ne rappelle pas le hook : le compilateur le mémoise sur une référence qui ne change jamais.",
+        "TanStack Table v9 rend une référence fraîche à chaque changement d'état : une table inline, ou un enfant qui reçoit table, se re-rend comme il faut. Le danger restant est plus étroit.",
       language: "tsx",
       source: "react-guidelines.md §2",
-      highlightedLines: [2, 8, 9],
+      highlightedLines: [3, 10],
       pitfall:
-        "Le symptôme : un compteur lié à filtered.length qui bouge pendant que les lignes restent en place. Le correctif n'est pas \"use no memo\", c'est de passer la donnée dérivée.",
-      code: `// Non : la table est stable, l'enfant cesse de re-rendre au changement de filtre.
-<TableBody table={table} />
+        "v8 (useReactTable) est l'ancien monde : le compilateur saute le composant qui appelle le hook, et le contournement était de passer getHeaderGroups() et getRowModel().rows plutôt que l'instance. On migre plutôt que de contourner. Et on n'enveloppe pas chaque cellule dans Subscribe par précaution.",
+      code: `// Non : la cellule ne reçoit qu'un row stable, et lit l'état par une de ses
+// méthodes. Le compilateur ne voit pas cette lecture et ne la mémoise pas.
+function Cellule({ row }: { row: Row<Task> }) {
+  return <td>{row.getIsSelected() ? "sélectionnée" : ""}</td>;
+}
 
-// Oui : getHeaderGroups() et getRowModel().rows produisent une référence fraîche
-// dès que la donnée change. C'est aussi ce que recommandent React et TanStack.
-<TableBody
-  headerGroups={table.getHeaderGroups()}
-  rows={table.getRowModel().rows}
-/>`,
+// Oui : la valeur lue arrive en prop, donc elle change quand l'état change.
+<Cellule row={row} selectionnee={row.getIsSelected()} />
+
+// Ou bien Subscribe à l'intérieur du composant, pour la lire sans la remonter.
+<Subscribe selector={() => row.getIsSelected()}>
+  {(selectionnee) => <td>{selectionnee ? "sélectionnée" : ""}</td>}
+</Subscribe>`,
     },
   ],
 };

@@ -220,8 +220,10 @@ const mutation = useMutation({
     const result = await postSearchAlert({ body: values });
     const errors = handleSdkError(result);
     if (errors) {
+      // Les champs dans l'ordre de l'écran : le premier fautif prend le focus.
+      const first = FIELD_ORDER.find((name) => name in errors);
       Object.entries(errors).forEach(([field, message]) =>
-        form.setError(field as any, { message }),
+        form.setError(field as any, { message }, { shouldFocus: field === first }),
       );
       throw new Error("Validation failed");
     }
@@ -251,6 +253,8 @@ const mutation = useMutation({
       highlightedLines: [5, 7, 8],
       code: `import { toast } from "sonner";
 
+import { handleSdkError, sdkErrorMessage } from "@/lib/parseViolations";
+
 const mutation = useMutation({
   mutationFn: async (data: { id: string; value: string }) => {
     const result = await postFieldUpdate({ body: data });
@@ -258,7 +262,7 @@ const mutation = useMutation({
     if (errors) throw new Error(Object.values(errors)[0]);
   },
   onSuccess: () => toast.success("Enregistré"),
-  onError: (error: Error) => toast.error(error.message),
+  onError: (error: Error) => toast.error(sdkErrorMessage(error)),
 });`,
     },
     {
@@ -320,6 +324,7 @@ public function testCreateSearchAlert(): void
       language: "md",
       source: "symfony-guidelines.md, Definition of Done",
       code: `- [ ] /quality passe : PHPStan niveau 9+, PHP-CS-Fixer, ESLint, Prettier, \`tsc --noEmit\`
+- [ ] \`make ci-local\` passe sur la branche fusionnée avec main
 - [ ] \`make types\` ne produit aucune dérive dans \`assets/lib/api/\`
 - [ ] \`doctrine:schema:validate --skip-sync\` OK
 - [ ] \`lint:container\` OK
@@ -365,7 +370,7 @@ public function getModelSaves(): array
       rank: "PHP 8.5",
       title: "Le pipe et le clone avec modifications",
       intent:
-        "Le runtime et le plancher composer.json sont en 8.5 : sa syntaxe est la norme, et PHP-CS-Fixer y réécrit le code avec @PHP85Migration.",
+        "Le runtime et le plancher composer.json sont en 8.5 : sa syntaxe est la norme, et PHP-CS-Fixer y réécrit le code avec @PHP8x5Migration, placé après @Symfony.",
       language: "php",
       source: "symfony-guidelines.md, PHP 8.5",
       highlightedLines: [4, 7],
@@ -528,11 +533,12 @@ const { data } = useQuery({ ...getSearchAlertListOptions({ query: filters }) });
       code: `// Non.
 const mutation = useMutation({ mutationFn: postSearchAlert });
 
-// Oui : les violations remontent champ par champ.
+// Oui : les violations remontent champ par champ, et le focus va au premier.
 const errors = handleSdkError(result);
 if (errors) {
+  const first = FIELD_ORDER.find((name) => name in errors);
   Object.entries(errors).forEach(([field, message]) =>
-    form.setError(field as any, { message }),
+    form.setError(field as any, { message }, { shouldFocus: field === first }),
   );
 }
 

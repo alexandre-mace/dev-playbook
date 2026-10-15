@@ -273,6 +273,8 @@ export default nextConfig;`,
       language: "tsx",
       source: "next-guidelines.md §4",
       highlightedLines: [4, 5],
+      pitfall:
+        "Elle ne rend que de la donnée cuite, jamais un paramètre de requête ni rien que le visiteur contrôle : dans le runtime Node, une entrée utilisateur qui atteignait le SVG était une exécution de code à distance avant Next 16.3.6.",
       code: `import { ImageResponse } from "next/og";
 
 import { DESCRIPTION, TITLE } from "@/lib/site";
@@ -437,15 +439,15 @@ export default catchError(Fallback);`,
       rank: "Kit",
       title: "Le kit se déclare, il ne se copie pas",
       intent:
-        "Un site de l'écosystème prend le registry @alexandremace. Tout passe par le CLI, jamais par un copier-coller entre projets.",
+        "Un site de l'écosystème prend le registry @alexandremace. Tout passe par le CLI, jamais par un copier-coller entre projets, et le style suit celui du kit.",
       file: "components.json",
       language: "json",
-      source: "next-guidelines.md §2",
+      source: "next-guidelines.md §2, react-guidelines.md §3",
       pitfall:
         "shadcn add theme ne réécrit pas un globals.css déjà configuré : chaque nouveau token se pose à la main, la valeur dans :root et la correspondance --color-x dans @theme inline.",
       code: `{
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "base-vega",
+  "style": "base-nova",
   "rsc": true,
   "tsx": true,
   "tailwind": {
