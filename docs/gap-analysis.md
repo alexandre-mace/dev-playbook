@@ -41,7 +41,7 @@ réduit à `export { cn } from "cn"` depuis la CLI 4.21.
 - [ ] `components.json:3` : `"style": "base-nova"` au lieu de `"base-vega"` (sûr)
   - La guideline nomme explicitement ce cas comme un écart que `/gap-code` doit lever. Nova donne un bouton de 32 px sur `rounded-lg` là où Vega donne 36 px sur `rounded-md`, donc des contrôles plus petits que le reste de l'interface.
   - Migration en entier, jamais deux bases dans un projet. Vérifier au passage les ombres, les anneaux de focus et les tailles dans un navigateur.
-- [ ] `lib/utils.ts:1` : `clsx` + `tailwind-merge` au lieu du paquet `cn` (sûr)
+- [x] `lib/utils.ts:1` : `clsx` + `tailwind-merge` au lieu du paquet `cn` (sûr)
   - `npx shadcn@latest migrate cn`, puis retirer les deux dépendances de `package.json`.
 
 ## 3. Le compilateur React fait le travail (Moyenne priorité)
