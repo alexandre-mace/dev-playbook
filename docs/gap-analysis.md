@@ -3,153 +3,80 @@
 > Ecarts entre les guidelines de la stack et le code actuel, à la date de l'audit.
 > Organisé par priorité. Les cases servent le temps d'une session de nettoyage :
 > le prochain audit réécrit le fichier.
-> Audit de main à 140f6330a03a49d1dc23b0058191e41673629bf7, le 15 octobre 2026. Un delta part de ce commit.
+> Audit de main à 94b5b552bc1668cfea3cac6eced3325feaf5ba74, le 16 octobre 2026. Un delta part de ce commit.
 
 ---
 
-## 0. Plancher de sécurité Next non atteint (Haute priorité)
+Passe complète, deuxième du dépôt. Les 23 fichiers source hors kit ont été relus, la
+config, la porte et les fichiers d'instruction compris. Les quatorze constats du premier
+passage sont tous fermés ou assumés ; ce qui suit est nouveau, et trois des quatre
+viennent du lot de correction d'hier.
 
-**Idéal** : `next-guidelines.md` fixe le plancher à **16.3.7**, publié le 30 septembre 2026.
-La ligne 16.3 compte aujourd'hui huit correctifs, jusqu'à 16.3.8.
-**Actuel** : `package.json` épingle `16.3.3`, et `node_modules` confirme 16.3.3 installé.
+Ce qui a été vérifié sans rien donner, pour que le prochain passage ne le refasse pas à
+l'aveugle : versions contre la référence du 29 septembre (toutes tenues, Next 16.3.8
+au-dessus du plancher 16.3.7, TypeScript 7.0.2, React 19.3.1, Biome 2.5.14, Base UI
+1.9.0, Tailwind 4.3.3), `tsconfig.json` strict, `packageManager` épinglé et lockfile
+pnpm unique, `reactCompiler: true` avec son `babel-plugin-react-compiler`, les en-têtes
+de sécurité, l'absence de `hostname: "**"`, de `useMemo` écrit à la main, d'`asChild`,
+d'`outline-hidden`, de `fetch` au runtime, de `NEXT_PUBLIC_`, de `favicon.ico` et de
+`tailwind.config`. Et les 54 écrans qui déclarent un surlignage pointent tous dans les
+bornes de leur bloc.
 
-- [x] `package.json:14` : quatre correctifs de retard, dont deux de sécurité (sûr)
-  - Monter à `16.3.8`, le dernier de la ligne mineure que la guideline impose. Rester en 16.3 : le passage en 16.4, publié depuis, relève de `/gap-sota`, pas de cet audit.
-  - Le plus grave des deux, 16.3.6, corrige une exécution de code à distance par `ImageResponse` quand une entrée utilisateur atteint le SVG. Ce dépôt a bien un `app/opengraph-image.tsx` qui passe par `ImageResponse`, mais il ne rend que `TITRE` et `DESCRIPTION`, deux constantes de `lib/site.ts`. Rien de ce qu'un visiteur contrôle n'y entre, donc la faille n'est pas atteignable ici. Le plancher reste à atteindre.
-
-## 1. Langue du code (Moyenne priorité)
-
-**Idéal** : `agent/writing.md`, section « Which language », impose l'anglais pour les
-classes, fonctions, variables, propriétés, noms de fichiers et routes, quelle que soit la
-langue du projet. Le contenu et les commentaires restent en français.
-**Actuel** : le contenu des écrans a été traduit en septembre, le code qui l'affiche non.
-
-- [x] `lib/playbook/types.ts`, `lib/playbook/render.ts`, `components/`, `app/`, `lib/` : 50 identifiants français (sûr)
-  - Les types : `Pile`, `Piste`, `Ecran`, `PileColoree`, `PisteColoree`, `EcranColore`.
-  - Leurs champs : `titre`, `intention`, `piege`, `surligne`, `langage`, `fichier`, `rang`, `resume`, `these`, `labelCourt`, `pistes`, `ecrans`.
-  - Les fonctions : `colorerPiles`, `colorer`, `lireAncre`, `ecrireAncre`, `noterPosition`, `changerDePile`, `changerDePiste`, `saisieEnCours`.
-  - Les composants et constantes : `Carte`, `Entete`, `MarqueGithub`, `TITRE`, `DESCRIPTION`, `DOMAINE`, `LANGAGES`.
-  - L'état local : `focusAuMontage`, `conteneur`, `depart`, `revision`, `positions`, `cle`, `actif`, `precedent`, `suivant`.
-  - Le site montre l'anglais dans ses blocs de code et l'enfreint dans celui qui les affiche. `AGENTS.md` ne nomme que `types.ts` et le champ `source`, tous deux inchangés : il n'a rien à suivre.
-
-## 2. Style shadcn et paquet `cn` (Moyenne priorité)
-
-**Idéal** : `react-guidelines.md` §3 veut un style déclaré conforme à ce qui est vendu, et
-un `lib/utils.ts` réduit à `export { cn } from "cn"` depuis la CLI 4.21.
-**Actuel** : le style s'accorde, `cn` était encore assemblé à la main.
-
-- [x] `components.json:3` : `"style": "base-nova"`, et c'est cohérent (sûr)
-  - Levé puis retiré. `react-guidelines.md` §3 imposait Vega partout ; mesure faite sur les dépôts, le pro est en Vega et le perso en Nova par le kit, les deux côtés cohérents. La guideline a été corrigée : laquelle des deux géométries est une décision de projet, et ce que `/gap-code` lève est le désaccord entre le champ déclaré et ce qui est vendu.
-  - Ici les deux s'accordent : `components.json` dit `base-nova`, et `components/ui/button.tsx` porte bien `rounded-lg` avec un `h-8` par défaut, comme le composant source du kit.
-- [x] `lib/utils.ts:1` : `clsx` + `tailwind-merge` au lieu du paquet `cn` (sûr)
-  - `npx shadcn@latest migrate cn`, puis retirer les deux dépendances de `package.json`.
-
-## 3. Le compilateur React fait le travail (Moyenne priorité)
-
-**Idéal** : `react-guidelines.md` §2, aucun `useMemo`, `useCallback` ni `React.memo` écrit
-à la main. Le compilateur est actif, `reactCompiler: true` est bien dans `next.config.ts`.
-**Actuel** : deux `useCallback` à la main dans le deck.
-
-- [x] `components/deck.tsx:63-64` : `precedent` et `suivant` enveloppés dans `useCallback` (sûr)
-  - Les deux sont des appels d'une ligne à `embla?.scrollPrev()` et `embla?.scrollNext()`. Le compilateur les mémoïse si besoin.
-  - `lib/playbook/next.ts:134` enseigne précisément l'inverse au lecteur : « Pas de useMemo ni de useCallback : le compilateur les place. » Le site enfreint la règle qu'il affiche.
-
-## 4. Versions en retard sur la guideline (Moyenne priorité)
-
-**Idéal** : les versions de référence de l'en-tête « Last watch » du 29 septembre 2026.
-**Actuel** : quatre outils derrière, sans conséquence de sécurité connue.
-
-- [x] `package.json` : TypeScript `^5` (5.9.3 installé) au lieu de 7.0 (sûr)
-  - `next build` type-check avec TypeScript 7 depuis 16.3. La migration passe par 6.0 d'abord, la procédure est dans `symfony-react/reactony.md` §8.
-- [x] `package.json` : Biome 2.4.2 au lieu de 2.5 (sûr)
-- [x] `package.json` : `@base-ui/react` 1.7.0 au lieu de 1.8 (sûr)
-- [x] `package.json` : React 19.2.8 au lieu de 19.3 (sûr)
-  - 19.3 rend les transitions indépendantes séparément au lieu de les regrouper. Le deck n'utilise pas `startTransition`, donc rien à vérifier côté comportement.
-
-## 5. Un `Omit` qui n'omet rien (Moyenne priorité)
-
-**Idéal** : un type dérivé dit ce qu'il remplace.
-**Actuel** : la clé passée à `Omit` porte un accent que le champ n'a pas.
-
-- [x] `lib/playbook/render.ts:11` : `Omit<Piste, "écrans">` au lieu de `Omit<Piste, "ecrans">` (sûr)
-  - Vérifié en compilant le cas isolé : `Omit` contraint sa clé à `keyof any`, pas à `keyof T`, donc une clé qui n'existe pas n'émet aucune erreur et `ecrans` survit à l'omission. Le type compile parce que `EcranColore[]` est assignable à `Ecran[]`, pas parce que l'`Omit` a fait son travail.
-  - La ligne 16 juste en dessous, `Omit<Pile, "pistes">`, est correcte : c'est bien une faute de frappe, pas une intention.
-  - Fermé par le renommage en anglais : la clé accentuée est devenue `"screens"`, qui existe. Le passage l'a corrigé sans le viser.
-
-## 6. Aucune porte ne refuse les règles mécaniques (Moyenne priorité)
+## 0. La porte mécanique ne lit pas la prose du dépôt (Moyenne priorité)
 
 **Idéal** : une règle qui se réduit à un motif est refusée au commit, pas relevée d'audit
-en audit.
-**Actuel** : ni `.husky/`, ni `.github/workflows/`, et `pnpm lint` se limite à Biome.
+en audit. Les règles de typographie d'`agent/writing.md` valent pour tout ce qui s'écrit,
+documentation comprise.
+**Actuel** : `scripts/check-mechanical.mjs` ne globe que
+`{app,components,lib,scripts}/**/*.{ts,tsx,css,mjs}`.
 
-- [x] racine du dépôt : la famille du point médian revient à chaque audit sans rien pour l'arrêter (sûr)
-  - 29 occurrences de `·` comme séparateur, détaillées en 9.2. `agent/writing.md` l'interdit, rien ne le refuse.
-  - Un script de quelques lignes lancé par `pnpm lint` suffit ici : la stack Next n'a pas d'équivalent de `bin/check-mechanical`, et ce dépôt n'a pas de hook de commit.
+- [ ] `scripts/check-mechanical.mjs:36` : `AGENTS.md`, `README.md` et `docs/` échappent à la porte (sûr)
+  - La règle du point médian et celle du tiret cadratin s'arrêtent au code. Le dépôt a pourtant plus de prose que de composants, et c'est la prose que `writing.md` vise en premier.
+  - L'extension demande une exception, et c'est elle qui rend le constat non trivial : les sept premières lignes d'`AGENTS.md` sont le bloc auto-géré que `next dev` réécrit, et il porte deux tirets cadratins. `AGENTS.md` dit lui-même de le commiter sans l'éditer, donc la règle doit sauter ce bloc plutôt que le refuser, sinon `pnpm lint` échoue sur un texte que personne ne contrôle.
 
-## 7. Icônes (Basse priorité)
+## 1. Deux couleurs jumelles rouvertes dans le lot qui fermait la famille (Basse priorité)
 
-**Idéal** : `next-guidelines.md` §2, les icônes de marque absentes de lucide 1.x vivent
-dans `components/icons.tsx`. §4, `app/apple-icon.png` en 180×180 accompagne `app/icon.svg`.
-**Actuel** : le mark GitHub est inline dans l'en-tête, et l'icône iOS manque.
+**Idéal** : une couleur vit une fois. `app/opengraph-image.tsx` lit `--background` et
+`--primary` dans `globals.css` au build, par son helper `token()`.
+**Actuel** : les deux icônes ajoutées dans le même commit recopient la valeur.
 
-- [x] `components/header.tsx:4-14` : `GithubMark` défini dans le fichier qui l'utilise (sûr)
-  - Sa place est `components/icons.tsx`, qui n'existe pas encore.
-- [x] `app/apple-icon.tsx` : ajouté, en 180×180 (sûr)
-  - En `ImageResponse` plutôt qu'en PNG statique, pour le même motif que l'icône : l'emoji se rastérise au build. Vérifié servi en PNG 180×180.
-- [x] `app/icon.svg` : l'emoji vivait dans un `<text>` SVG (sûr)
-  - Trouvé en corrigeant l'icône iOS, pas au premier passage. `next-guidelines.md` §4 demande un `icon.tsx` en `ImageResponse` quand l'icône dérive d'un emoji, précisément parce qu'un `<text>` emoji s'affiche avec la police du système. Remplacé par `app/icon.tsx`, servi en PNG 64×64.
+- [ ] `app/icon.tsx:21` et `app/apple-icon.tsx:17` : `background: "#FAF8F0"` en dur (sûr)
+  - C'est exactement `--background` de `app/globals.css:9`, et donc la jumelle que `token()` venait d'éliminer à côté. Changer le thème laisse les deux icônes derrière, sans bruit, comme l'image OG le faisait avant-hier.
+  - Le correctif est l'appel qui existe déjà. Le helper vit dans `opengraph-image.tsx` : il remonte dans `lib/site.ts`, et les trois fichiers le partagent.
+  - Le constat vaut autant pour la méthode : le lot d'hier a corrigé la ligne et pas la famille, alors qu'il créait les deux nouvelles occurrences dans le même diff.
 
-## 8. `shadcn/tailwind.css` non importé (Basse priorité)
+## 2. Le focus se pose dans un sous-arbre aria-hidden (Basse priorité)
 
-**Idéal** : `react-guidelines.md` §3, les composants du registry supposent
-`@import "shadcn/tailwind.css"`, qui déclare les variantes `data-open`, `data-closed`,
-`data-selected`, `data-horizontal` et les autres.
-**Actuel** : `app/globals.css:1` n'importe que `tailwindcss`, et le paquet `shadcn` n'est
-pas installé.
+**Idéal** : `react-guidelines.md` §6. Rien d'atteignable ne vit sous un `aria-hidden`, et
+un lecteur d'écran ne doit pas se retrouver sur un nœud que l'arbre d'accessibilité dit
+inexistant.
+**Actuel** : la réglette du deck est `aria-hidden="true"`, ses segments sont des
+`<button>` cliquables.
 
-- [x] `app/globals.css:2-5` : importé, le risque latent est fermé (sûr)
-  - Vérifié : le code n'utilise qu'une seule variante nue, `data-active:`, onze fois. `node_modules/@base-ui/react/tabs/tab/TabsTabDataAttributes.js` documente `data-active` comme « Present when the tab is active », sans valeur, donc le `[data-active]` natif de Tailwind le capte correctement. Les onglets fonctionnent.
-  - Ce qui casserait : `data-orientation` porte une valeur, et `tabs.tsx` l'écrit déjà en forme explicite `group-data-[orientation=horizontal]`. Mais le jour où un composant du registry arrive avec `data-horizontal:` ou `data-selected:`, la règle tombe en silence. C'est le défaut décrit dans la guideline : un panneau d'onglets à zéro pixel de large, sur toutes les pages.
-  - Soit `@import "shadcn/tailwind.css"` avec `shadcn` en dépendance de développement, soit le fichier vendu à côté de `globals.css`.
+- [ ] `components/deck.tsx:136-158` : cliquer un segment laisse le focus dedans (sûr)
+  - Mesuré dans le navigateur, pas déduit : après un clic réel sur le segment du cinquième écran, le deck passe bien à 5/12, et `document.activeElement.closest('[aria-hidden="true"]')` rend le bouton. Le `tabIndex={-1}` retire la tabulation, pas le focus au clic.
+  - Le plus court est d'annuler le focus au `mousedown` plutôt que de défaire le `aria-hidden` : la réglette double volontairement ce que le compteur et les flèches exposent déjà, et lui rendre une voix la ferait annoncer douze fois.
 
-## 9. Cosmétique et jumeaux (Basse priorité)
+## 3. AGENTS.md a trois longueurs de retard sur le lot d'hier (Basse priorité)
 
-### 9.1 Couleurs en dur, jumelles des tokens
+**Idéal** : `AGENTS.md` porte ce qui est vrai du dépôt, et `writing-things-down.md` veut
+qu'un piège qui coûte une heure y vive plutôt que dans un fichier réécrit à chaque audit.
+**Actuel** : trois choses posées hier n'y sont pas.
 
-**Idéal** : les couleurs vivent une fois, dans les tokens de `:root`.
-**Actuel** : l'image OG les recopie.
-
-- [x] `app/opengraph-image.tsx:18,22,29,33` : `#FAF8F0`, `#0737FF`, `#6b6a63` en dur (sûr)
-  - `ImageResponse` n'a pas de feuille de style, donc la valeur littérale est inévitable. Ce qui ne l'est pas, c'est qu'elle soit écrite ici : `#FAF8F0` est le `--background` de `app/globals.css:9` et `#0737FF` son `--primary` de la ligne 18. Changer le thème laisse l'image OG derrière, sans bruit.
-  - Les sortir en constantes de `lib/site.ts`, lues des deux côtés.
-
-### 9.2 Point médian comme séparateur
-
-**Idéal** : `agent/writing.md`, section Typography, pas de point médian comme séparateur.
-**Actuel** : 29 occurrences.
-
-- [x] `lib/playbook/symfony-react.ts` (13), `next.ts` (9), `tanstack-start.ts` (5) : champs `source` du type `"symfony-guidelines.md, Playbook 1 · reactony.md §2"` (sûr)
-- [x] `app/opengraph-image.tsx:34` : `"Symfony + React · Next.js · TanStack Start"` (sûr)
-- [x] `app/layout.tsx:11` : le gabarit de titre `` `%s · ${TITLE}` `` (sûr)
-  - La guideline autorise le tiret demi-cadratin pour joindre une page et le site dans un titre, « Annonces – La Grange ». C'est exactement ce cas.
-
-### 9.3 Cibles tactiles de la réglette
-
-**Idéal** : `react-guidelines.md` §6, une cible tactile fait au moins 24 × 24 pixels CSS
-(WCAG 2.2, critère 2.5.8, niveau AA).
-**Actuel** : les segments de progression font 4 pixels de haut.
-
-- [x] `components/deck.tsx:150` : `h-1 flex-1` sur des `<button>` cliquables (probable)
-  - Les segments sont `aria-hidden` et `tabIndex={-1}`, donc hors de l'arbre d'accessibilité et hors tabulation : au clavier, seules les flèches pilotent le deck. Le critère tolère qu'une autre commande de la page rende le même service, et les deux boutons de 32 px le font.
-  - L'équivalence n'est pourtant que partielle : les flèches avancent d'un écran, la réglette saute au septième. Au doigt, cette seconde fonction n'est pas atteignable.
-  - Le moins coûteux : garder la barre fine à l'œil et élargir la zone cliquable par un `py-2` plus un fond transparent, sans changer l'aspect.
+- [ ] `AGENTS.md:21` : « `pnpm lint` Biome » (sûr)
+  - La commande est `biome check && node scripts/check-mechanical.mjs` depuis hier. La porte mécanique n'est nommée nulle part dans le fichier, alors que c'est elle qui refuse le point médian et qu'un contributeur a besoin de savoir qu'elle existe avant de se demander pourquoi son commit est refusé.
+- [ ] `AGENTS.md:73` : la liste des exclusions Biome omet `public/` (sûr)
+  - Ajouté hier. La raison est un vrai piège : Biome 2.5 lit désormais les SVG et `noSvgWithoutTitle` réclame un titre sur `public/mark.svg`, qui n'est rendu que par `<Brand>` en `alt=""`. Lui donner un titre le ferait annoncer en double avec le nom de la marque, ce que `react-guidelines.md` §6 interdit. Cette raison ne vit aujourd'hui que dans ce fichier, que le prochain audit écrase.
+- [ ] `AGENTS.md` : le coût de build des icônes n'est écrit nulle part (sûr)
+  - `app/icon.tsx` et `app/apple-icon.tsx` rendent un emoji par `ImageResponse`, ce qui va chercher la police Noto sur un CDN. Mesuré, le premier build froid passe de 2 s à 26 s. Quelqu'un qui voit un build lent sans cette ligne cherchera ailleurs.
 
 ## Écarts assumés
 
 - `package.json` : Biome épinglé en **2.5.14**, pas en 2.5.15. La 2.5.15 panique sur tout `.gitignore` non vide quand `vcs.useIgnoreFile` est à vrai, `path is expected to be under the root`, depuis `ignore-0.4.25/src/gitignore.rs:232`. Bissecté : 2.5.10 à 2.5.14 passent, 2.5.15 non, et un `.gitignore` vide suffit à faire disparaître la panique quelles que soient les `includes`. C'est un bug amont, pas notre config, et le contourner en passant `useIgnoreFile` à faux reviendrait à cacher un plantage. À relever au prochain `/gap-sota`.
-- `biome.json` : `public/` est écarté du linter. Biome 2.5 lit désormais les SVG, et `noSvgWithoutTitle` réclame un `<title>` sur `public/mark.svg`. Ce fichier n'est rendu que par `<Brand>`, en `alt=""`, donc décoratif : lui donner un titre le ferait annoncer en double avec le nom de la marque, ce que `react-guidelines.md` §6 interdit explicitement.
-- `app/icon.tsx` et `app/apple-icon.tsx` : le rendu de l'emoji va chercher la police Noto sur un CDN au build. Mesuré, le premier build froid passe de 2 s à 26 s, les suivants retombent à 1,5 s de génération statique. Vercel repart froid à chaque déploiement, donc il paie cette seconde fois, sur des builds qui durent déjà 21 à 36 s. Le prix d'un emoji qui se dessine pareil partout.
-
-- `components/code-block.tsx:68` : `dangerouslySetInnerHTML` sur le HTML de Shiki. `react-guidelines.md` §4 réserve l'échappatoire au markup produit par le projet : c'est le cas, le HTML est produit au build à partir de constantes du dépôt, aucune entrée utilisateur n'y arrive. La raison est déjà écrite dans le `biome-ignore` au-dessus de la ligne.
-- `components/brand.tsx` et `components/made-with-love.tsx` portent `"use client"` sans tenir d'état ni d'interaction, là où `next-guidelines.md` §4 réserve la directive à ce qui en tient. Les deux viennent du registry `@alexandremace` et `biome.json` les exclut : la correction appartient au kit, pas à ce dépôt. À remonter par `/propagate-kit` plutôt qu'à corriger ici.
-- Pas de suite de tests. `next-guidelines.md` ne les rend obligatoires qu'avec un backend (§6), que ce site n'a pas : tout est cuit au build, personne n'écrit. `pnpm build` et `/live-test` sont la porte.
+- `biome.json` : `public/` est écarté du linter, pour la raison détaillée en 3 ci-dessus.
+- `app/icon.tsx` et `app/apple-icon.tsx` : le rendu de l'emoji dépend d'un CDN au build, pour 24 s sur un build froid. Vercel repart froid à chaque déploiement, sur des builds qui durent déjà 21 à 38 s. C'est le prix d'un emoji qui se dessine pareil partout, au lieu d'un `<text>` SVG rendu par la police du système.
+- `app/opengraph-image.tsx:31-32` : `#171717` et `#6b6a63` restent en littéral. Leurs jumeaux `--foreground` et `--muted-foreground` sont déclarés en OkLCh, que Satori ne sait pas interpréter. Les deux lignes le disent.
+- `components/code-block.tsx:72` : `dangerouslySetInnerHTML` sur le HTML de Shiki. `react-guidelines.md` §4 réserve l'échappatoire au markup produit par le projet : c'est le cas, il est produit au build depuis des constantes du dépôt, aucune entrée utilisateur n'y arrive. La raison est dans le `biome-ignore` au-dessus de la ligne.
+- `AGENTS.md:1-9` : le bloc auto-géré par `next dev` porte deux tirets cadratins, que `writing.md` interdit. Il se réécrit tout seul à chaque `next dev` et le fichier dit de le commiter sans l'éditer.
+- `components/brand.tsx` et `components/made-with-love.tsx` portent `"use client"` sans tenir d'état ni d'interaction, là où `next-guidelines.md` §4 réserve la directive à ce qui en tient. Les deux viennent du registry `@alexandremace` et `biome.json` les exclut : la correction appartient au kit, à remonter par `/propagate-kit`.
+- Pas de suite de tests, et pas de hook de commit. `next-guidelines.md` ne rend les tests obligatoires qu'avec un backend (§6), que ce site n'a pas : tout est cuit au build, personne n'écrit. `pnpm build`, `pnpm lint` et `/live-test` sont la porte, et c'est celle que la Definition of Done de la stack demande.
