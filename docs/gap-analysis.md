@@ -34,13 +34,13 @@ langue du projet. Le contenu et les commentaires restent en français.
 
 ## 2. Style shadcn et paquet `cn` (Moyenne priorité)
 
-**Idéal** : `react-guidelines.md` §3 impose `"style": "base-vega"` et un `lib/utils.ts`
-réduit à `export { cn } from "cn"` depuis la CLI 4.21.
-**Actuel** : le projet est sur Nova, et `cn` est encore assemblé à la main.
+**Idéal** : `react-guidelines.md` §3 veut un style déclaré conforme à ce qui est vendu, et
+un `lib/utils.ts` réduit à `export { cn } from "cn"` depuis la CLI 4.21.
+**Actuel** : le style s'accorde, `cn` était encore assemblé à la main.
 
-- [ ] `components.json:3` : `"style": "base-nova"` au lieu de `"base-vega"` (sûr)
-  - La guideline nomme explicitement ce cas comme un écart que `/gap-code` doit lever. Nova donne un bouton de 32 px sur `rounded-lg` là où Vega donne 36 px sur `rounded-md`, donc des contrôles plus petits que le reste de l'interface.
-  - Migration en entier, jamais deux bases dans un projet. Vérifier au passage les ombres, les anneaux de focus et les tailles dans un navigateur.
+- [x] `components.json:3` : `"style": "base-nova"`, et c'est cohérent (sûr)
+  - Levé puis retiré. `react-guidelines.md` §3 imposait Vega partout ; mesure faite sur les dépôts, le pro est en Vega et le perso en Nova par le kit, les deux côtés cohérents. La guideline a été corrigée : laquelle des deux géométries est une décision de projet, et ce que `/gap-code` lève est le désaccord entre le champ déclaré et ce qui est vendu.
+  - Ici les deux s'accordent : `components.json` dit `base-nova`, et `components/ui/button.tsx` porte bien `rounded-lg` avec un `h-8` par défaut, comme le composant source du kit.
 - [x] `lib/utils.ts:1` : `clsx` + `tailwind-merge` au lieu du paquet `cn` (sûr)
   - `npx shadcn@latest migrate cn`, puis retirer les deux dépendances de `package.json`.
 
