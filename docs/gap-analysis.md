@@ -13,7 +13,7 @@
 La ligne 16.3 compte aujourd'hui huit correctifs, jusqu'à 16.3.8.
 **Actuel** : `package.json` épingle `16.3.3`, et `node_modules` confirme 16.3.3 installé.
 
-- [ ] `package.json:14` : quatre correctifs de retard, dont deux de sécurité (sûr)
+- [x] `package.json:14` : quatre correctifs de retard, dont deux de sécurité (sûr)
   - Monter à `16.3.8`, le dernier de la ligne mineure que la guideline impose. Rester en 16.3 : le passage en 16.4, publié depuis, relève de `/gap-sota`, pas de cet audit.
   - Le plus grave des deux, 16.3.6, corrige une exécution de code à distance par `ImageResponse` quand une entrée utilisateur atteint le SVG. Ce dépôt a bien un `app/opengraph-image.tsx` qui passe par `ImageResponse`, mais il ne rend que `TITRE` et `DESCRIPTION`, deux constantes de `lib/site.ts`. Rien de ce qu'un visiteur contrôle n'y entre, donc la faille n'est pas atteignable ici. Le plancher reste à atteindre.
 
