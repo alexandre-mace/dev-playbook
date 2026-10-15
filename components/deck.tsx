@@ -2,107 +2,104 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { ArrowLeft, ArrowRight, TriangleAlert } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CodeBlock } from "@/components/code-block";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { EcranColore } from "@/lib/playbook/rendu";
+import type { HighlightedScreen } from "@/lib/playbook/render";
 import { cn } from "@/lib/utils";
 
 /** Le champ de saisie a la priorité sur les flèches. */
-function saisieEnCours(cible: EventTarget | null) {
-  if (!(cible instanceof HTMLElement)) return false;
+function isTyping(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
   return (
-    cible.isContentEditable ||
-    ["INPUT", "TEXTAREA", "SELECT"].includes(cible.tagName) ||
-    cible.getAttribute("role") === "tab"
+    target.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+    target.getAttribute("role") === "tab"
   );
 }
 
 export function Deck({
-  ecrans,
-  depart,
+  screens,
+  start,
   onPosition,
-  focusAuMontage,
+  focusOnMount,
 }: {
-  ecrans: EcranColore[];
+  screens: HighlightedScreen[];
   /** Position restaurée quand on revient sur une piste déjà parcourue. */
-  depart: number;
+  start: number;
   onPosition: (index: number) => void;
   /** Vrai dès le premier changement d'onglet : le deck prend alors le focus. */
-  focusAuMontage: boolean;
+  focusOnMount: boolean;
 }) {
-  const conteneur = useRef<HTMLDivElement>(null);
+  const container = useRef<HTMLDivElement>(null);
   const [emblaRef, embla] = useEmblaCarousel({
     align: "center",
-    startIndex: depart,
+    startIndex: start,
     containScroll: "trimSnaps",
   });
-  const [index, setIndex] = useState(depart);
+  const [index, setIndex] = useState(start);
 
   useEffect(() => {
     if (!embla) return;
-    const surSelection = () => {
-      const courant = embla.selectedScrollSnap();
-      setIndex(courant);
-      onPosition(courant);
+    const onSelect = () => {
+      const current = embla.selectedScrollSnap();
+      setIndex(current);
+      onPosition(current);
     };
-    embla.on("select", surSelection);
+    embla.on("select", onSelect);
     return () => {
-      embla.off("select", surSelection);
+      embla.off("select", onSelect);
     };
   }, [embla, onPosition]);
 
   // Le deck remonte à chaque changement d'onglet : il prend le focus en arrivant,
   // pour que les flèches le pilotent au lieu de piloter la liste d'onglets.
   useEffect(() => {
-    if (focusAuMontage) conteneur.current?.focus({ preventScroll: true });
-  }, [focusAuMontage]);
-
-  const precedent = useCallback(() => embla?.scrollPrev(), [embla]);
-  const suivant = useCallback(() => embla?.scrollNext(), [embla]);
+    if (focusOnMount) container.current?.focus({ preventScroll: true });
+  }, [focusOnMount]);
 
   useEffect(() => {
-    function surTouche(evenement: KeyboardEvent) {
-      if (evenement.metaKey || evenement.ctrlKey || evenement.altKey) return;
-      if (saisieEnCours(evenement.target)) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (isTyping(event.target)) return;
 
-      if (evenement.key === "ArrowLeft") {
-        evenement.preventDefault();
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
         embla?.scrollPrev();
-      } else if (evenement.key === "ArrowRight") {
-        evenement.preventDefault();
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
         embla?.scrollNext();
-      } else if (evenement.key === "Home") {
-        evenement.preventDefault();
+      } else if (event.key === "Home") {
+        event.preventDefault();
         embla?.scrollTo(0);
-      } else if (evenement.key === "End") {
-        evenement.preventDefault();
-        embla?.scrollTo(ecrans.length - 1);
+      } else if (event.key === "End") {
+        event.preventDefault();
+        embla?.scrollTo(screens.length - 1);
       }
     }
 
-    window.addEventListener("keydown", surTouche);
-    return () => window.removeEventListener("keydown", surTouche);
-  }, [embla, ecrans.length]);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [embla, screens.length]);
 
   return (
     // tabIndex -1 : pas un arrêt de tabulation, mais le focus s'y pose après un
     // changement d'onglet, pour que les flèches pilotent le deck et non la liste.
     <div
-      ref={conteneur}
+      ref={container}
       tabIndex={-1}
       className="flex flex-col gap-4 outline-none"
     >
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="-ml-4 flex touch-pan-y items-stretch">
-          {ecrans.map((ecran, rang) => (
+          {screens.map((screen, rank) => (
             <div
-              key={ecran.id}
+              key={screen.id}
               className="min-w-0 shrink-0 grow-0 basis-full pl-4 lg:basis-[88%] xl:basis-[80%]"
             >
-              <Carte ecran={ecran} actif={rang === index} />
+              <Card screen={screen} active={rank === index} />
             </div>
           ))}
         </div>
@@ -117,7 +114,7 @@ export function Deck({
           variant="secondary"
           size="icon"
           className="size-8"
-          onClick={precedent}
+          onClick={() => embla?.scrollPrev()}
           disabled={index === 0}
           aria-label="Écran précédent"
           aria-keyshortcuts="ArrowLeft"
@@ -129,8 +126,8 @@ export function Deck({
           variant="secondary"
           size="icon"
           className="size-8"
-          onClick={suivant}
-          disabled={index === ecrans.length - 1}
+          onClick={() => embla?.scrollNext()}
+          disabled={index === screens.length - 1}
           aria-label="Écran suivant"
           aria-keyshortcuts="ArrowRight"
           title="Écran suivant (→)"
@@ -139,75 +136,81 @@ export function Deck({
         </Button>
 
         <div className="flex flex-1 items-center gap-1.5" aria-hidden="true">
-          {ecrans.map((ecran, rang) => (
+          {screens.map((screen, rank) => (
             <button
-              key={ecran.id}
+              key={screen.id}
               type="button"
               tabIndex={-1}
-              title={`${rang + 1}. ${ecran.titre}`}
-              onClick={() => embla?.scrollTo(rang)}
+              title={`${rank + 1}. ${screen.title}`}
+              onClick={() => embla?.scrollTo(rank)}
               className={cn(
                 "h-1 flex-1 rounded-full transition-colors",
-                rang === index ? "bg-primary" : "bg-border hover:bg-primary/40",
+                rank === index ? "bg-primary" : "bg-border hover:bg-primary/40",
               )}
             />
           ))}
         </div>
 
         <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-          {index + 1} / {ecrans.length}
+          {index + 1} / {screens.length}
         </span>
       </div>
     </div>
   );
 }
 
-function Carte({ ecran, actif }: { ecran: EcranColore; actif: boolean }) {
+function Card({
+  screen,
+  active,
+}: {
+  screen: HighlightedScreen;
+  active: boolean;
+}) {
   return (
     <article
-      aria-hidden={!actif}
+      aria-hidden={!active}
       // inert : la carte voisine sort aussi de l'ordre de tabulation, sinon on
       // traverse autant de boutons Copier invisibles qu'il y a d'écrans.
-      inert={!actif}
+      inert={!active}
+      // 21rem : ce que prennent l'en-tête, les onglets, les commandes et le footer.
+      // Le pari, pas la contrainte : la page ne défile en général pas, et le clamp
+      // la laisse défiler plutôt que d'écraser le code sur un écran trop court.
       className={cn(
-        // 21rem : ce que prennent l'en-tête, les onglets, les commandes et le footer.
-        // Le pari, pas la contrainte : la page ne défile en général pas, et le clamp
-        // la laisse défiler plutôt que d'écraser le code sur un écran trop court.
         "flex h-[min(70vh,42rem)] flex-col overflow-hidden rounded-xl border bg-card transition-opacity duration-300 md:h-[clamp(22rem,calc(100dvh_-_21rem),42rem)]",
-        !actif && "opacity-45",
+        !active && "opacity-45",
       )}
     >
       <header className="shrink-0 px-6 pt-4 pb-3">
         <div className="flex flex-wrap items-baseline gap-2">
           <Badge variant="secondary" className="font-mono">
-            {ecran.rang}
+            {screen.rank}
           </Badge>
           <h3 className="text-lg font-semibold tracking-tight text-balance">
-            {ecran.titre}
+            {screen.title}
           </h3>
           <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground">
-            {ecran.source}
+            {screen.source}
           </span>
         </div>
         <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-pretty text-muted-foreground">
-          {ecran.intention}
+          {screen.intent}
         </p>
       </header>
 
       <CodeBlock
-        html={ecran.html}
-        code={ecran.code}
-        fichier={ecran.fichier}
-        langage={ecran.langage}
+        html={screen.html}
+        code={screen.code}
+        file={screen.file}
+        language={screen.language}
         className="min-h-0 flex-1"
       />
 
-      {ecran.piege && (
+      {screen.pitfall && (
         <footer className="flex shrink-0 gap-3 px-6 py-3">
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" />
           <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
             <span className="font-medium text-foreground">Le piège. </span>
-            {ecran.piege}
+            {screen.pitfall}
           </p>
         </footer>
       )}

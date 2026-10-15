@@ -1,22 +1,22 @@
-import type { Pile } from "./types";
+import type { Stack } from "./types";
 
 const featureFullstack = {
   id: "feature",
   label: "Feature full-stack",
-  resume:
+  summary:
     "Un écran dont l'état vit dans l'URL, son loader, le raccord Convex de bout en bout, et le spec qui le prouve.",
-  ecrans: [
+  screens: [
     {
       id: "route",
-      rang: "1",
-      titre: "L'écran et ses search params typés",
-      intention:
+      rank: "1",
+      title: "L'écran et ses search params typés",
+      intent:
         "Le schéma vit sur la route, donc les lectures et les liens sont vérifiés à la compilation. Renommer un champ casse le build de chaque lien qui l'utilisait.",
-      fichier: "src/routes/tasks.tsx",
-      langage: "tsx",
+      file: "src/routes/tasks.tsx",
+      language: "tsx",
       source: "tanstack-start-guidelines.md, Patterns",
-      surligne: [5, 6, 7],
-      piege:
+      highlightedLines: [5, 6, 7],
+      pitfall:
         "Un filtre, un onglet ou une pagination qu'un utilisateur voudrait partager en lien n'a rien à faire dans un useState. Il étend le schéma Zod de la route.",
       code: `import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
@@ -41,14 +41,14 @@ function Tasks() {
     },
     {
       id: "loader",
-      rang: "2",
-      titre: "Le loader alimente le cache Query",
-      intention:
+      rank: "2",
+      title: "Le loader alimente le cache Query",
+      intent:
         "La route rend depuis le cache puis revalide, au lieu de bloquer sur une cascade de requêtes lancées dans les composants.",
-      fichier: "src/routes/tasks.tsx",
-      langage: "tsx",
+      file: "src/routes/tasks.tsx",
+      language: "tsx",
       source: "tanstack-start-guidelines.md, Patterns · §2",
-      surligne: [6, 8],
+      highlightedLines: [6, 8],
       code: `import { convexQuery } from "@convex-dev/react-query";
 
 import { api } from "../../convex/_generated/api";
@@ -62,14 +62,14 @@ export const Route = createFileRoute("/tasks")({
     },
     {
       id: "schema",
-      rang: "3",
-      titre: "Le schéma Convex",
-      intention:
+      rank: "3",
+      title: "Le schéma Convex",
+      intent:
         "Les tables et leurs index. Un .collect() sans index scanne la table : chaque filtre de requête a le sien.",
-      fichier: "convex/schema.ts",
-      langage: "ts",
+      file: "convex/schema.ts",
+      language: "ts",
       source: "tanstack-start-guidelines.md §3",
-      surligne: [10],
+      highlightedLines: [10],
       code: `import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -84,15 +84,15 @@ export default defineSchema({
     },
     {
       id: "genere",
-      rang: "3 bis",
-      titre: "Ce que Convex a écrit pour vous",
-      intention:
+      rank: "3 bis",
+      title: "Ce que Convex a écrit pour vous",
+      intent:
         "Le schéma génère le modèle de données et les constructeurs de fonctions. Le routeur génère son arbre. Les deux se commitent, aucun des deux ne s'édite.",
-      fichier: "convex/_generated/",
-      langage: "ts",
+      file: "convex/_generated/",
+      language: "ts",
       source: "tanstack-start-guidelines.md §3 · §1",
-      surligne: [10, 11, 12, 18],
-      piege:
+      highlightedLines: [10, 11, 12, 18],
+      pitfall:
         "Un api.tasks.listMine qui cesse de compiler après un renommage, ce n'est pas le générateur qui casse : c'est lui qui montre les appels devenus faux. C'est tout l'intérêt de commiter ce qu'il écrit.",
       code: `// Régénéré à chaque \`convex dev\`, commité, jamais édité :
 //
@@ -115,15 +115,15 @@ useSuspenseQuery(convexQuery(api.tasks.list, {}));`,
     },
     {
       id: "query-mutation",
-      rang: "4",
-      titre: "La query lit, la mutation écrit",
-      intention:
+      rank: "4",
+      title: "La query lit, la mutation écrit",
+      intent:
         "Les arguments sont validés par args avant même le handler. Le handler vérifie ensuite la session, puis l'autorisation sur le document visé : une identité n'est pas une autorisation.",
-      fichier: "convex/tasks.ts",
-      langage: "ts",
+      file: "convex/tasks.ts",
+      language: "ts",
       source: "tanstack-start-guidelines.md §3 · §3 bis",
-      surligne: [8, 14, 27, 31],
-      piege:
+      highlightedLines: [8, 14, 27, 31],
+      pitfall:
         "Convex renvoie ce que la fonction retourne : rendre le document entier le publie entier. On sélectionne les champs. Ce qui n'est pas destiné au client se déclare internalQuery ou internalMutation.",
       code: `import { v } from "convex/values";
 
@@ -163,14 +163,14 @@ export const markDone = mutation({
     },
     {
       id: "pont",
-      rang: "5",
-      titre: "Le pont Convex vers Query, câblé une fois",
-      intention:
+      rank: "5",
+      title: "Le pont Convex vers Query, câblé une fois",
+      intent:
         "Une seule fois dans le projet, et toute lecture passe ensuite par le cache Query.",
-      fichier: "src/router.tsx",
-      langage: "ts",
+      file: "src/router.tsx",
+      language: "ts",
       source: "tanstack-start-guidelines.md §3",
-      surligne: [11],
+      highlightedLines: [11],
       code: `import { ConvexQueryClient } from "@convex-dev/react-query";
 import { QueryClient } from "@tanstack/react-query";
 import { ConvexReactClient } from "convex/react";
@@ -193,15 +193,15 @@ convexQueryClient.connect(queryClient);
     },
     {
       id: "lecture-ecriture",
-      rang: "6",
-      titre: "Lire et écrire depuis l'écran",
-      intention:
+      rank: "6",
+      title: "Lire et écrire depuis l'écran",
+      intent:
         "useSuspenseQuery pour que le fetch démarre pendant le SSR : le client navigateur reprend ensuite l'abonnement vivant, sans flash de chargement.",
-      fichier: "src/routes/tasks.tsx",
-      langage: "tsx",
+      file: "src/routes/tasks.tsx",
+      language: "tsx",
       source: "tanstack-start-guidelines.md §3",
-      surligne: [8, 11],
-      piege:
+      highlightedLines: [8, 11],
+      pitfall:
         "Les abonnements survivent 5 minutes après le démontage (gcTime). Baisser cette valeur est une décision, pas un accident.",
       code: `import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
@@ -229,14 +229,14 @@ function Tasks() {
     },
     {
       id: "formulaire",
-      rang: "7",
-      titre: "Le formulaire, avec le même Zod que la mutation",
-      intention:
+      rank: "7",
+      title: "Le formulaire, avec le même Zod que la mutation",
+      intent:
         "TanStack Form côté client, et la mutation Convex valide avec le même schéma Zod grâce à convex-helpers. On valide au bord, une fois, et le type inféré descend de là.",
-      fichier: "convex/schemas.ts, convex/tasks.ts, src/routes/tasks.new.tsx",
-      langage: "tsx",
+      file: "convex/schemas.ts, convex/tasks.ts, src/routes/tasks.new.tsx",
+      language: "tsx",
       source: "tanstack-start-guidelines.md, Playbook · §2",
-      surligne: [2, 7, 20],
+      highlightedLines: [2, 7, 20],
       code: `// convex/schemas.ts : du Zod pur, importé des deux côtés.
 export const taskSchema = z.object({ title: z.string().min(1).max(120) });
 
@@ -278,15 +278,15 @@ function NewTask() {
     },
     {
       id: "server-fn",
-      rang: "8",
-      titre: "La fonction serveur",
-      intention:
+      rank: "8",
+      title: "La fonction serveur",
+      intent:
         "Du RPC typé, validé au bord, appelable depuis un loader ou un composant. Pour une opération ponctuelle : un appel tiers, un secret.",
-      fichier: "src/server/invoice.ts",
-      langage: "ts",
+      file: "src/server/invoice.ts",
+      language: "ts",
       source: "tanstack-start-guidelines.md, Patterns · §3 bis",
-      surligne: [9, 14, 19],
-      piege:
+      highlightedLines: [9, 14, 19],
+      pitfall:
         "Elle compile en route publique appelable avec n'importe quel payload. Garder la route qui rend l'interface ne garde rien : la vérification est dans la fonction.",
       code: `import { createMiddleware, createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -315,15 +315,15 @@ export const generateInvoice = createServerFn({ method: "POST" })
     },
     {
       id: "tests",
-      rang: "9",
-      titre: "Le spec du parcours",
-      intention:
+      rank: "9",
+      title: "Le spec du parcours",
+      intent:
         "C'est une application, pas une brochure : un nouveau parcours utilisateur part avec son spec Playwright.",
-      fichier: "e2e/tasks.spec.ts",
-      langage: "ts",
+      file: "e2e/tasks.spec.ts",
+      language: "ts",
       source: "tanstack-start-guidelines.md §5",
-      surligne: [11, 12],
-      piege:
+      highlightedLines: [11, 12],
+      pitfall:
         "Aucun test unitaire ne voit une régression de mémoisation : Vitest tourne sans le plugin compilateur. Seul un test sur un vrai build la voit.",
       code: `import { expect, test } from "@playwright/test";
 
@@ -341,10 +341,10 @@ test("créer une tâche, la cocher, la retrouver filtrée", async ({ page }) => 
     },
     {
       id: "dod",
-      rang: "10",
-      titre: "Definition of Done",
-      intention: "L'écran est fini quand ces lignes sont vertes.",
-      langage: "md",
+      rank: "10",
+      title: "Definition of Done",
+      intent: "L'écran est fini quand ces lignes sont vertes.",
+      language: "md",
       source: "tanstack-start-guidelines.md §5",
       code: `- [ ] /quality passe : \`pnpm build\`, \`pnpm test\`, \`tsc --noEmit\`, le linter
 - [ ] /live-test joue : le chemin nominal en navigateur, console et réseau propres
@@ -359,19 +359,19 @@ test("créer une tâche, la cocher, la retrouver filtrée", async ({ page }) => 
 const patterns = {
   id: "patterns",
   label: "Patterns du moment",
-  resume: "Les briques qui ne dépendent pas d'une feature en cours.",
-  ecrans: [
+  summary: "Les briques qui ne dépendent pas d'une feature en cours.",
+  screens: [
     {
       id: "compilateur",
-      rang: "Compilateur",
-      titre: "Le compilateur, chemin natif sur Vite",
-      intention:
+      rank: "Compilateur",
+      title: "Le compilateur, chemin natif sur Vite",
+      intent:
         "Le chemin Rust est environ dix fois plus rapide que le plugin Babel. Il demande oxc-transform-react en peer optionnelle.",
-      fichier: "vite.config.ts",
-      langage: "ts",
+      file: "vite.config.ts",
+      language: "ts",
       source: "tanstack-start-guidelines.md, Patterns",
-      surligne: [5],
-      piege:
+      highlightedLines: [5],
+      pitfall:
         "Le plugin marque encore ce chemin expérimental : le chemin Babel (reactCompilerPreset via @rolldown/plugin-babel) reste le repli stable.",
       code: `import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
@@ -382,13 +382,13 @@ export default defineConfig({
     },
     {
       id: "optimistic",
-      rang: "React 19",
-      titre: "useOptimistic",
-      intention:
+      rank: "React 19",
+      title: "useOptimistic",
+      intent:
         "Montrer une mutation atterrir avant la réponse du serveur. Pour une action réversible et non critique, pas pour une création qui peut échouer visiblement.",
-      langage: "tsx",
+      language: "tsx",
       source: "react-guidelines.md §1",
-      surligne: [4, 5, 6, 7],
+      highlightedLines: [4, 5, 6, 7],
       code: `function TaskList({ tasks }: { tasks: Task[] }) {
   const toggle = useMutation({ mutationFn: useConvexMutation(api.tasks.markDone) });
 
@@ -412,14 +412,14 @@ export default defineConfig({
     },
     {
       id: "garde-layout",
-      rang: "Auth",
-      titre: "La garde vit dans une route de layout",
-      intention:
+      rank: "Auth",
+      title: "La garde vit dans une route de layout",
+      intent:
         "S'il y a des comptes, on les garde une fois, dans le layout, jamais feuille par feuille.",
-      fichier: "src/routes/_authenticated.tsx",
-      langage: "tsx",
+      file: "src/routes/_authenticated.tsx",
+      language: "tsx",
       source: "tanstack-start-guidelines.md §2",
-      surligne: [5, 6],
+      highlightedLines: [5, 6],
       code: `import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -434,13 +434,13 @@ export const Route = createFileRoute("/_authenticated")({
     },
     {
       id: "etat-serveur",
-      rang: "État",
-      titre: "L'état serveur n'est pas de l'état client",
-      intention:
+      rank: "État",
+      title: "L'état serveur n'est pas de l'état client",
+      intent:
         "Query possède ce qui vient du serveur. Zustand est pour l'état client vraiment global, jamais comme cache.",
-      langage: "ts",
+      language: "ts",
       source: "tanstack-start-guidelines.md §2",
-      surligne: [2, 6],
+      highlightedLines: [2, 6],
       code: `// Non : Zustand ne sait pas invalider, ni revalider, ni dédupliquer.
 const useStore = create((set) => ({ tasks: [], setTasks: (t) => set({ tasks: t }) }));
 
@@ -451,14 +451,14 @@ const { data } = useSuspenseQuery(convexQuery(api.tasks.listMine, { status: "all
     },
     {
       id: "table",
-      rang: "Compilateur",
-      titre: "Ne jamais passer une instance de librairie en prop",
-      intention:
+      rank: "Compilateur",
+      title: "Ne jamais passer une instance de librairie en prop",
+      intent:
         "useReactTable rend un objet stable dont il mute les entrailles. L'enfant qui le reçoit ne rappelle pas le hook : le compilateur le mémoise sur une référence qui ne change jamais.",
-      langage: "tsx",
+      language: "tsx",
       source: "react-guidelines.md §2",
-      surligne: [2, 8, 9],
-      piege:
+      highlightedLines: [2, 8, 9],
+      pitfall:
         "Le symptôme : un compteur lié à filtered.length qui bouge pendant que les lignes restent en place. Le correctif n'est pas \"use no memo\", c'est de passer la donnée dérivée.",
       code: `// Non : la table est stable, l'enfant cesse de re-rendre au changement de filtre.
 <TableBody table={table} />
@@ -476,17 +476,17 @@ const { data } = useSuspenseQuery(convexQuery(api.tasks.listMine, { status: "all
 const pieges = {
   id: "pieges",
   label: "Pièges",
-  resume: "Ce que le framework rend facile à perdre de vue.",
-  ecrans: [
+  summary: "Ce que le framework rend facile à perdre de vue.",
+  screens: [
     {
       id: "frontiere",
-      rang: "Sécurité",
-      titre: "Le client et le serveur ont l'air d'être le même fichier",
-      intention:
+      rank: "Sécurité",
+      title: "Le client et le serveur ont l'air d'être le même fichier",
+      intent:
         "C'est exactement ce qui rend la frontière facile à perdre de vue. Seule une variable préfixée VITE_ appartient au bundle, et elle est lisible par tous.",
-      langage: "ts",
+      language: "ts",
       source: "tanstack-start-guidelines.md §3 bis",
-      surligne: [2, 5],
+      highlightedLines: [2, 5],
       code: `// Dans le bundle, public.
 const url = import.meta.env.VITE_CONVEX_URL;
 
@@ -495,13 +495,13 @@ const secret = process.env.STRIPE_SECRET_KEY;`,
     },
     {
       id: "urlsearchparams",
-      rang: "Routeur",
-      titre: "Parser URLSearchParams à la main",
-      intention:
+      rank: "Routeur",
+      title: "Parser URLSearchParams à la main",
+      intent:
         "Le routeur est le framework. Le faire soi-même veut dire qu'on a quitté les rails, et on perd la vérification à la compilation avec.",
-      langage: "ts",
+      language: "ts",
       source: "tanstack-start-guidelines.md §2",
-      surligne: [2, 3],
+      highlightedLines: [2, 3],
       code: `// Non.
 const params = new URLSearchParams(window.location.search);
 const page = Number(params.get("page") ?? 1);
@@ -511,13 +511,13 @@ const { page } = Route.useSearch();`,
     },
     {
       id: "document-entier",
-      rang: "Sécurité",
-      titre: "Retourner le document entier",
-      intention:
+      rank: "Sécurité",
+      title: "Retourner le document entier",
+      intent:
         "Convex envoie ce que la fonction retourne. Un email, un hash, une note interne voyagent sinon.",
-      langage: "ts",
+      language: "ts",
       source: "tanstack-start-guidelines.md §3 bis",
-      surligne: [2, 5],
+      highlightedLines: [2, 5],
       code: `// Non.
 return await ctx.db.get(args.id);
 
@@ -531,12 +531,12 @@ return { _id, title, done };
   ],
 };
 
-export const TANSTACK_START: Pile = {
+export const TANSTACK_START: Stack = {
   id: "tanstack-start",
   label: "TanStack Start, applications",
-  labelCourt: "TanStack Start",
-  these:
+  shortLabel: "TanStack Start",
+  thesis:
     "L'écran est généré par ce que fait l'utilisateur. Routage typé, search params typés, Convex derrière.",
   guideline: "tanstack-start/tanstack-start-guidelines.md",
-  pistes: [featureFullstack, patterns, pieges],
+  tracks: [featureFullstack, patterns, pieges],
 };

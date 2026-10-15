@@ -6,42 +6,42 @@
  * est cuit au build, la page ne va rien chercher.
  */
 
-export interface Ecran {
+export interface Screen {
   /** Identifiant stable, utilisé dans l'ancre de l'URL. */
   id: string;
   /** Le rang dans la piste, affiché tel quel : "1", "2 bis", "Piège". */
-  rang: string;
-  titre: string;
+  rank: string;
+  title: string;
   /** Une phrase : ce que cette étape décide, pas ce qu'elle fait. */
-  intention: string;
+  intent: string;
   /** Chemin du fichier concerné, affiché en tête du bloc de code. */
-  fichier?: string;
-  langage: string;
+  file?: string;
+  language: string;
   code: string;
   /** Le détail qui coûte une heure quand on ne le connaît pas. */
-  piege?: string;
+  pitfall?: string;
   /** D'où vient la règle, dans dev-standards. */
   source: string;
   /** Lignes surlignées dans le bloc, en base 1. */
-  surligne?: number[];
+  highlightedLines?: number[];
 }
 
-export interface Piste {
+export interface Track {
   id: string;
   label: string;
   /** Ce que la piste couvre, une ligne, sous les onglets. */
-  resume: string;
-  ecrans: Ecran[];
+  summary: string;
+  screens: Screen[];
 }
 
-export interface Pile {
+export interface Stack {
   id: string;
   label: string;
   /** Le nom court affiché dans l'onglet quand la place manque. */
-  labelCourt: string;
+  shortLabel: string;
   /** La thèse de la pile, une phrase. */
-  these: string;
+  thesis: string;
   /** Le fichier de dev-standards qui fait autorité. */
   guideline: string;
-  pistes: Piste[];
+  tracks: Track[];
 }

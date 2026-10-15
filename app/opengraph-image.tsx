@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-import { DESCRIPTION, TITRE } from "@/lib/site";
+import { DESCRIPTION, TITLE } from "@/lib/site";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -24,7 +24,7 @@ export default function Image() {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <div style={{ fontSize: 88, fontWeight: 600, letterSpacing: -2 }}>
-          {TITRE}
+          {TITLE}
         </div>
         <div style={{ fontSize: 34, color: "#6b6a63", lineHeight: 1.4 }}>
           {DESCRIPTION}

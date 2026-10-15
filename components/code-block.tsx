@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-const ETIQUETTES: Record<string, string> = {
+const LABELS: Record<string, string> = {
   bash: "shell",
   js: "javascript",
   makefile: "make",
@@ -21,45 +21,45 @@ const ETIQUETTES: Record<string, string> = {
 export function CodeBlock({
   html,
   code,
-  fichier,
-  langage,
+  file,
+  language,
   className,
 }: {
   html: string;
   code: string;
-  fichier?: string;
-  langage: string;
+  file?: string;
+  language: string;
   className?: string;
 }) {
-  const [copie, setCopie] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  async function copier() {
+  async function copy() {
     await navigator.clipboard.writeText(code);
-    setCopie(true);
-    setTimeout(() => setCopie(false), 1600);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
   }
 
   return (
     <div className={cn("flex min-h-0 flex-col border-y bg-code", className)}>
       <div className="flex shrink-0 items-center gap-3 border-b px-4 py-2">
         <span className="truncate font-mono text-xs text-muted-foreground">
-          {fichier ?? ETIQUETTES[langage] ?? langage}
+          {file ?? LABELS[language] ?? language}
         </span>
-        {fichier && (
+        {file && (
           <span className="ml-auto shrink-0 font-mono text-[10px] tracking-wide text-code-gutter uppercase">
-            {ETIQUETTES[langage] ?? langage}
+            {LABELS[language] ?? language}
           </span>
         )}
         <button
           type="button"
-          onClick={copier}
+          onClick={copy}
           aria-label="Copier le code"
           className={cn(
             "shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50",
-            !fichier && "ml-auto",
+            !file && "ml-auto",
           )}
         >
-          {copie ? (
+          {copied ? (
             <Check className="size-3.5 text-success" />
           ) : (
             <Copy className="size-3.5" />

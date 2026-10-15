@@ -8,7 +8,7 @@ import {
  * La coloration se fait au build, dans un Server Component : le navigateur reçoit
  * du HTML déjà coloré, et pas une ligne de Shiki.
  */
-const LANGAGES = [
+const LANGUAGES = [
   "bash",
   "css",
   "js",
@@ -26,19 +26,19 @@ let instance: Promise<Highlighter> | undefined;
 function highlighter() {
   instance ??= createHighlighter({
     themes: ["vitesse-light"],
-    langs: [...LANGAGES],
+    langs: [...LANGUAGES],
   });
   return instance;
 }
 
-export async function colorer(
+export async function highlightCode(
   code: string,
-  langage: string,
-  surligne: number[] = [],
+  language: string,
+  highlightedLines: number[] = [],
 ): Promise<string> {
   const shiki = await highlighter();
-  const lang = (LANGAGES as readonly string[]).includes(langage)
-    ? (langage as BundledLanguage)
+  const lang = (LANGUAGES as readonly string[]).includes(language)
+    ? (language as BundledLanguage)
     : "ts";
 
   return shiki.codeToHtml(code, {
@@ -47,8 +47,8 @@ export async function colorer(
     defaultColor: false,
     transformers: [
       {
-        line(node, ligne) {
-          if (surligne.includes(ligne))
+        line(node, line) {
+          if (highlightedLines.includes(line))
             this.addClassToHast(node, "highlighted");
         },
       },

@@ -1,8 +1,8 @@
 import { Brand } from "@/components/brand";
-import { SOURCE, TITRE } from "@/lib/site";
+import { SOURCE, TITLE } from "@/lib/site";
 
 /** La marque GitHub n'est plus dans lucide : le mark est inline. */
-function MarqueGithub({ className }: { className?: string }) {
+function GithubMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" className={className}>
       <path
@@ -19,14 +19,14 @@ function MarqueGithub({ className }: { className?: string }) {
  * Le titre de la page vit ici : l'écran appartient au deck, un hero prendrait
  * la place du code.
  */
-export function Entete({ tagline }: { tagline: string }) {
+export function Header({ tagline }: { tagline: string }) {
   return (
     <header className="flex items-center justify-between gap-4 py-3">
       {/* items-center et non items-baseline : Brand est un inline-flex dont le
           premier enfant est le logo, et la ligne de base d'une image est son bord
           inférieur. La tagline se retrouverait alignée sous le texte de la marque. */}
       <div className="flex min-w-0 items-center gap-3">
-        <Brand name={TITRE} logo="/mark.svg" href="/" />
+        <Brand name={TITLE} logo="/mark.svg" href="/" />
         <p className="hidden truncate text-sm leading-none text-muted-foreground md:block">
           {tagline}
         </p>
@@ -38,7 +38,7 @@ export function Entete({ tagline }: { tagline: string }) {
         aria-label="dev-standards sur GitHub"
         className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
       >
-        <MarqueGithub className="size-4" />
+        <GithubMark className="size-4" />
       </a>
     </header>
   );

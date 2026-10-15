@@ -2,19 +2,19 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
 
-import { DESCRIPTION, DOMAINE, TITRE } from "@/lib/site";
+import { DESCRIPTION, DOMAIN, TITLE } from "@/lib/site";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(DOMAINE),
-  title: { default: TITRE, template: `%s · ${TITRE}` },
+  metadataBase: new URL(DOMAIN),
+  title: { default: TITLE, template: `%s · ${TITLE}` },
   description: DESCRIPTION,
   openGraph: {
-    title: TITRE,
+    title: TITLE,
     description: DESCRIPTION,
-    url: DOMAINE,
-    siteName: TITRE,
+    url: DOMAIN,
+    siteName: TITLE,
     locale: "fr_FR",
     type: "website",
   },

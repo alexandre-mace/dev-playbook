@@ -24,13 +24,13 @@ classes, fonctions, variables, propriétés, noms de fichiers et routes, quelle 
 langue du projet. Le contenu et les commentaires restent en français.
 **Actuel** : le contenu des écrans a été traduit en septembre, le code qui l'affiche non.
 
-- [ ] `lib/playbook/types.ts`, `lib/playbook/rendu.ts`, `components/`, `app/`, `lib/` : 50 identifiants français (sûr)
+- [x] `lib/playbook/types.ts`, `lib/playbook/render.ts`, `components/`, `app/`, `lib/` : 50 identifiants français (sûr)
   - Les types : `Pile`, `Piste`, `Ecran`, `PileColoree`, `PisteColoree`, `EcranColore`.
   - Leurs champs : `titre`, `intention`, `piege`, `surligne`, `langage`, `fichier`, `rang`, `resume`, `these`, `labelCourt`, `pistes`, `ecrans`.
   - Les fonctions : `colorerPiles`, `colorer`, `lireAncre`, `ecrireAncre`, `noterPosition`, `changerDePile`, `changerDePiste`, `saisieEnCours`.
   - Les composants et constantes : `Carte`, `Entete`, `MarqueGithub`, `TITRE`, `DESCRIPTION`, `DOMAINE`, `LANGAGES`.
   - L'état local : `focusAuMontage`, `conteneur`, `depart`, `revision`, `positions`, `cle`, `actif`, `precedent`, `suivant`.
-  - Le site montre l'anglais dans ses blocs de code et l'enfreint dans celui qui les affiche. `AGENTS.md` nomme ces types et suit le renommage.
+  - Le site montre l'anglais dans ses blocs de code et l'enfreint dans celui qui les affiche. `AGENTS.md` ne nomme que `types.ts` et le champ `source`, tous deux inchangés : il n'a rien à suivre.
 
 ## 2. Style shadcn et paquet `cn` (Moyenne priorité)
 
@@ -50,7 +50,7 @@ réduit à `export { cn } from "cn"` depuis la CLI 4.21.
 à la main. Le compilateur est actif, `reactCompiler: true` est bien dans `next.config.ts`.
 **Actuel** : deux `useCallback` à la main dans le deck.
 
-- [ ] `components/deck.tsx:63-64` : `precedent` et `suivant` enveloppés dans `useCallback` (sûr)
+- [x] `components/deck.tsx:63-64` : `precedent` et `suivant` enveloppés dans `useCallback` (sûr)
   - Les deux sont des appels d'une ligne à `embla?.scrollPrev()` et `embla?.scrollNext()`. Le compilateur les mémoïse si besoin.
   - `lib/playbook/next.ts:134` enseigne précisément l'inverse au lecteur : « Pas de useMemo ni de useCallback : le compilateur les place. » Le site enfreint la règle qu'il affiche.
 

@@ -1,22 +1,22 @@
-import type { Pile } from "./types";
+import type { Stack } from "./types";
 
 const featureFullstack = {
   id: "feature",
   label: "Feature full-stack",
-  resume:
+  summary:
     "La séquence du playbook, dans l'ordre : le contrat backend, la route, les types générés, le composant, le cache, les tests, la porte qualité.",
-  ecrans: [
+  screens: [
     {
       id: "contrat",
-      rang: "1",
-      titre: "Modéliser le contrat backend",
-      intention:
+      rank: "1",
+      title: "Modéliser le contrat backend",
+      intent:
         "PHP est la source de vérité. Les types et la validation vivent sur l'entité, et tout le reste en découle.",
-      fichier: "src/Entity/SearchAlert.php",
-      langage: "php",
+      file: "src/Entity/SearchAlert.php",
+      language: "php",
       source: "symfony-guidelines.md, Playbook 1 · reactony.md §2",
-      surligne: [7, 8, 9],
-      piege:
+      highlightedLines: [7, 8, 9],
+      pitfall:
         "Charge utile 1:1 avec l'entité : l'entité directement. Sous-ensemble d'une grosse entité : un DTO allowlist plus ObjectMapper, pour la sécurité. Rien qui corresponde à une entité : un DTO simple.",
       code: `<?php
 
@@ -39,14 +39,14 @@ class SearchAlert
     },
     {
       id: "schema",
-      rang: "1 bis",
-      titre: "Le schéma suit l'entité",
-      intention:
+      rank: "1 bis",
+      title: "Le schéma suit l'entité",
+      intent:
         "Pas de migration écrite à la main : le hook de déploiement applique le schéma. On relit donc le SQL qu'il va jouer avant de commiter.",
-      langage: "bash",
+      language: "bash",
       source: "symfony-guidelines.md, Playbook 1 · §19",
-      surligne: [2],
-      piege:
+      highlightedLines: [2],
+      pitfall:
         "Une colonne qui se durcit (non nullable, unique) sur des lignes existantes fait échouer la mise à jour, donc le déploiement. La commande de back-fill se branche dans le hook, au-dessus de la ligne du schéma.",
       code: `# Le SQL que le déploiement va jouer, à lire avant de commiter :
 php bin/console doctrine:schema:update --dump-sql
@@ -56,15 +56,15 @@ php bin/console doctrine:schema:validate --skip-sync`,
     },
     {
       id: "route",
-      rang: "2",
-      titre: "La route du contrôleur",
-      intention:
+      rank: "2",
+      title: "La route du contrôleur",
+      intent:
         "format: 'json' est obligatoire, #[IsGranted] aussi. Le contrôleur oriente : Domain décide, Service exécute.",
-      fichier: "src/Controller/SearchAlertController.php",
-      langage: "php",
+      file: "src/Controller/SearchAlertController.php",
+      language: "php",
       source: "symfony-guidelines.md §3 · Playbook 2",
-      surligne: [3, 4, 5],
-      piege:
+      highlightedLines: [3, 4, 5],
+      pitfall:
         "Sans format: 'json', les erreurs 422 arrivent en HTML et le frontend ne sait plus les parser. Et un docblock en prose fuit dans le summary OpenAPI, donc dans le JSDoc du SDK : le garder en tags seulement.",
       code: `<?php
 
@@ -83,15 +83,15 @@ public function create(
     },
     {
       id: "regle",
-      rang: "2 bis",
-      titre: "La règle métier vit dans Domain",
-      intention:
+      rank: "2 bis",
+      title: "La règle métier vit dans Domain",
+      intent:
         "Dès qu'il y a une décision (un seuil, une éligibilité, un calcul), elle sort du contrôleur. Domain décide sans rien connaître d'extérieur, Service exécute, le contrôleur relie les deux.",
-      fichier: "src/Domain/SearchAlert/SearchAlertRules.php",
-      langage: "php",
+      file: "src/Domain/SearchAlert/SearchAlertRules.php",
+      language: "php",
       source: "symfony-guidelines.md, Principes · §2 · §15",
-      surligne: [7, 8, 16],
-      piege:
+      highlightedLines: [7, 8, 16],
+      pitfall:
         "Un Domain qui injecte l'EntityManager ou un client HTTP n'est plus un Domain : il ne se teste plus sans mocks. La règle reçoit des valeurs, elle rend une décision.",
       code: `<?php
 
@@ -114,15 +114,15 @@ if (!$this->rules->canCreate($count)) {
     },
     {
       id: "types",
-      rang: "3",
-      titre: "La génération de types",
-      intention:
+      rank: "3",
+      title: "La génération de types",
+      intent:
         "Une commande, et le contrat PHP devient des types TS, du Zod, un SDK et les queryOptions. Rien n'est écrit à la main de ce côté.",
-      fichier: "Makefile",
-      langage: "makefile",
+      file: "Makefile",
+      language: "makefile",
       source: "symfony-guidelines.md, Playbook 3 · reactony.md §5",
-      surligne: [5],
-      piege:
+      highlightedLines: [5],
+      pitfall:
         "openapi.yaml et assets/lib/api/ sont commités : la porte de dérive compare le généré au commité, et git diff --exit-code ne verrait rien s'ils étaient ignorés.",
       code: `types:
 	php -d memory_limit=512M bin/console nelmio:apidoc:dump --format=yaml > openapi.yaml
@@ -133,15 +133,15 @@ if (!$this->rules->canCreate($count)) {
     },
     {
       id: "genere",
-      rang: "3 bis",
-      titre: "Ce que la commande a écrit pour vous",
-      intention:
+      rank: "3 bis",
+      title: "Ce que la commande a écrit pour vous",
+      intent:
         "Une commande, et tout le contrat backend existe en TypeScript : les types, les schémas Zod, une fonction par endpoint, les options TanStack Query. Ce dossier se consomme, il ne s'écrit pas.",
-      fichier: "assets/lib/api/",
-      langage: "ts",
+      file: "assets/lib/api/",
+      language: "ts",
       source: "reactony.md §5",
-      surligne: [9, 10, 13, 16, 19],
-      piege:
+      highlightedLines: [9, 10, 13, 16, 19],
+      pitfall:
         "Le dossier est commité, comme openapi.yaml. La porte de dérive compare le généré au commité : git diff --exit-code ne verrait rien s'il était ignoré.",
       code: `// Écrit par \`make types\`, commité, jamais édité à la main :
 //
@@ -165,15 +165,15 @@ await postSearchAlert({ body: values });`,
     },
     {
       id: "montage",
-      rang: "4",
-      titre: "Le montage dans la page Twig",
-      intention:
+      rank: "4",
+      title: "Le montage dans la page Twig",
+      intent:
         "Twig rend la page, React ne prend que l'îlot interactif. Les données initiales descendent en props, sérialisées avec les mêmes groupes que l'API.",
-      fichier: "templates/search_alert/index.html.twig",
-      langage: "twig",
+      file: "templates/search_alert/index.html.twig",
+      language: "twig",
       source: "symfony-guidelines.md, Playbook 4 · reactony.md §6",
-      surligne: [4, 5, 6],
-      piege:
+      highlightedLines: [4, 5, 6],
+      pitfall:
         "Chaque îlot est enveloppé une fois dans un AppProviders (QueryClientProvider et Toaster) : sans lui, le premier useMutation plante au rendu, et le toast ne s'affiche nulle part.",
       code: `{% extends 'base.html.twig' %}
 
@@ -190,15 +190,15 @@ await postSearchAlert({ body: values });`,
     },
     {
       id: "formulaire",
-      rang: "5",
-      titre: "Le composant React",
-      intention:
+      rank: "5",
+      title: "Le composant React",
+      intent:
         "Un seul patron de formulaire : Controller de RHF, la famille Field de shadcn, le Zod généré, useMutation. Le 422 revient champ par champ.",
-      fichier: "assets/components/search-alert-form.tsx",
-      langage: "tsx",
+      file: "assets/components/search-alert-form.tsx",
+      language: "tsx",
       source: "reactony.md §4 · §3",
-      surligne: [9, 15, 16, 17],
-      piege:
+      highlightedLines: [9, 15, 16, 17],
+      pitfall:
         "Les deux clés : data-invalid sur <Field>, qui bascule le bloc entier en état d'erreur, et aria-invalid sur le contrôle. Le vieux <Form>/<FormField>/<FormMessage> est toléré dans l'existant, pas pour du neuf.",
       code: `import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -242,13 +242,13 @@ const mutation = useMutation({
     },
     {
       id: "action-simple",
-      rang: "5 bis",
-      titre: "Action simple, édition en ligne",
-      intention:
+      rank: "5 bis",
+      title: "Action simple, édition en ligne",
+      intent:
         "Un seul champ, un toggle, un date picker : RHF est de trop. useMutation, le SDK, handleSdkError, un toast.",
-      langage: "tsx",
+      language: "tsx",
       source: "reactony.md §4",
-      surligne: [5, 7, 8],
+      highlightedLines: [5, 7, 8],
       code: `import { toast } from "sonner";
 
 const mutation = useMutation({
@@ -263,13 +263,13 @@ const mutation = useMutation({
     },
     {
       id: "cache",
-      rang: "6",
-      titre: "Invalider le cache",
-      intention:
+      rank: "6",
+      title: "Invalider le cache",
+      intent:
         "Toute mutation qui change une donnée lue ailleurs invalide, dans son onSuccess, avec les mêmes queryOptions générées.",
-      langage: "tsx",
+      language: "tsx",
       source: "reactony.md §4 · Playbook 5",
-      surligne: [6, 7],
+      highlightedLines: [6, 7],
       code: `import { getSearchAlertListOptions } from "@/lib/api";
 
 const queryClient = useQueryClient();
@@ -282,15 +282,15 @@ const mutation = useMutation({
     },
     {
       id: "tests",
-      rang: "7",
-      titre: "Les tests dus",
-      intention:
+      rank: "7",
+      title: "Les tests dus",
+      intent:
         "Ce qu'une nouvelle route et un nouveau parcours doivent, par rendement décroissant.",
-      fichier: "tests/Functional/SearchAlertControllerTest.php",
-      langage: "php",
+      file: "tests/Functional/SearchAlertControllerTest.php",
+      language: "php",
       source: "symfony-guidelines.md, Playbook 6 · §13",
-      surligne: [9, 14],
-      piege:
+      highlightedLines: [9, 14],
+      pitfall:
         "Le calcul d'argent (frais, paliers, tranches) part avec un test basé sur les propriétés, via Eris : les cas limites d'arrondi ne se trouvent pas à la main.",
       code: `<?php
 
@@ -314,10 +314,10 @@ public function testCreateSearchAlert(): void
     },
     {
       id: "dod",
-      rang: "8",
-      titre: "Definition of Done",
-      intention: "La feature est finie quand toutes ces lignes sont vertes.",
-      langage: "md",
+      rank: "8",
+      title: "Definition of Done",
+      intent: "La feature est finie quand toutes ces lignes sont vertes.",
+      language: "md",
       source: "symfony-guidelines.md, Definition of Done",
       code: `- [ ] /quality passe : PHPStan niveau 9+, PHP-CS-Fixer, ESLint, Prettier, \`tsc --noEmit\`
 - [ ] \`make types\` ne produit aucune dérive dans \`assets/lib/api/\`
@@ -336,19 +336,19 @@ public function testCreateSearchAlert(): void
 const patterns = {
   id: "patterns",
   label: "Patterns du moment",
-  resume:
+  summary:
     "Ce que Symfony 8.1 et PHP 8.5 ont apporté, et les patrons qui ne dépendent pas d'une feature en cours.",
-  ecrans: [
+  screens: [
     {
       id: "serialize",
-      rang: "SF 8.1",
-      titre: "#[Serialize], le miroir de MapRequestPayload",
-      intention:
+      rank: "SF 8.1",
+      title: "#[Serialize], le miroir de MapRequestPayload",
+      intent:
         "L'entrée avait son attribut, la sortie a le sien. Le contrôleur retourne le DTO, le tableau ou l'entité : plus de $this->json(...).",
-      langage: "php",
+      language: "php",
       source: "symfony-guidelines.md §3",
-      surligne: [4],
-      piege:
+      highlightedLines: [4],
+      pitfall:
         "Vérifié sur un cas réel : sortie identique à l'octet près, zéro dérive OpenAPI, SDK ou Zod. C'est le défaut pour les nouveaux endpoints /api/, l'existant migre à l'occasion.",
       code: `<?php
 
@@ -362,14 +362,14 @@ public function getModelSaves(): array
     },
     {
       id: "php85",
-      rang: "PHP 8.5",
-      titre: "Le pipe et le clone avec modifications",
-      intention:
+      rank: "PHP 8.5",
+      title: "Le pipe et le clone avec modifications",
+      intent:
         "Le runtime et le plancher composer.json sont en 8.5 : sa syntaxe est la norme, et PHP-CS-Fixer y réécrit le code avec @PHP85Migration.",
-      langage: "php",
+      language: "php",
       source: "symfony-guidelines.md, PHP 8.5",
-      surligne: [4, 7],
-      piege:
+      highlightedLines: [4, 7],
+      pitfall:
         "Un projet dont le composer.json dit encore >= 8.4 ne tient pas sa promesse dès qu'une ligne utilise |> : c'est un écart pour /gap-code, pas une tolérance.",
       code: `<?php
 
@@ -385,13 +385,13 @@ public function withPrice(Money $price): static { /* ... */ }`,
     },
     {
       id: "filtres",
-      rang: "Lecture",
-      titre: "Les filtres GET passent par un DTO",
-      intention:
+      rank: "Lecture",
+      title: "Les filtres GET passent par un DTO",
+      intent:
         "Le seul cas où un DTO se justifie d'office : des filtres ne sont pas une entité.",
-      langage: "php",
+      language: "php",
       source: "reactony.md §1 · symfony-guidelines.md §4",
-      surligne: [5, 7],
+      highlightedLines: [5, 7],
       code: `<?php
 
 /** @return array<int, Farm> */
@@ -405,13 +405,13 @@ public function list(
     },
     {
       id: "allowlist",
-      rang: "Écriture",
-      titre: "Le DTO allowlist, pour un sous-ensemble",
-      intention:
+      rank: "Écriture",
+      title: "Le DTO allowlist, pour un sous-ensemble",
+      intent:
         "Quand le formulaire édite quelques champs d'une grosse entité, le DTO est la liste de ce qui a le droit de bouger, et ObjectMapper fait le report.",
-      langage: "php",
+      language: "php",
       source: "symfony-guidelines.md §4",
-      surligne: [3, 5],
+      highlightedLines: [3, 5],
       code: `<?php
 
 #[Map(target: Profile::class)]
@@ -429,14 +429,14 @@ final class PartialProfileDto
     },
     {
       id: "upload",
-      rang: "SF 8.1",
-      titre: "L'upload de fichier",
-      intention:
+      rank: "SF 8.1",
+      title: "L'upload de fichier",
+      intent:
         "Un DTO plat avec un ?UploadedFile et son Assert\\File, par MapRequestPayload. L'identifiant vit dans la route.",
-      langage: "php",
+      language: "php",
       source: "symfony-guidelines.md §4 · reactony.md §2",
-      surligne: [6, 7],
-      piege:
+      highlightedLines: [6, 7],
+      pitfall:
         "Côté frontend, garder file.size aligné sur maxSize : au-delà de upload_max_filesize, le SAPI PHP jette silencieusement, le résolveur rend un 422 vide et le toast reste muet.",
       code: `<?php
 
@@ -456,14 +456,14 @@ public function upload(string $id, #[MapRequestPayload] ProjectImageDto $dto): R
     },
     {
       id: "voter",
-      rang: "Sécurité",
-      titre: "Chaque affordance a le voter de son action",
-      intention:
+      rank: "Sécurité",
+      title: "Chaque affordance a le voter de son action",
+      intent:
         "Une page ouverte à un rôle large n'autorise pas tous ses boutons. On garde chaque appel à l'action avec le voter de l'action visée, sur le sujet.",
-      langage: "twig",
+      language: "twig",
       source: "symfony-guidelines.md §3",
-      surligne: [2, 3],
-      piege:
+      highlightedLines: [2, 3],
+      pitfall:
         "Un is_granted('ROLE_X') brut sur un bouton est la fuite récurrente : le rôle voit la page, clique, et prend un 403 qui remonte dans Sentry comme un bug.",
       code: `{# la page est ouverte à plusieurs rôles, les boutons ne le sont pas #}
 {% if is_granted('edit', structure) %}...{% endif %}
@@ -471,11 +471,11 @@ public function upload(string $id, #[MapRequestPayload] ProjectImageDto $dto): R
     },
     {
       id: "foundry",
-      rang: "Tests",
-      titre: "Foundry et le rollback transactionnel",
-      intention:
+      rank: "Tests",
+      title: "Foundry et le rollback transactionnel",
+      intent:
         "Les entités de test se construisent par factory, et DAMA rend chaque test indépendant sans truncate manuel.",
-      langage: "php",
+      language: "php",
       source: "symfony-guidelines.md §13",
       code: `<?php
 
@@ -493,18 +493,18 @@ SearchAlertFactory::createMany(3, ['channels' => ['sms']]);
 const pieges = {
   id: "pieges",
   label: "Pièges",
-  resume:
+  summary:
     "Les anti-patterns fermés. Trouvés dans l'existant, ils sont à refactorer, pas à recopier.",
-  ecrans: [
+  screens: [
     {
       id: "fetch",
-      rang: "Données",
-      titre: "useEffect + fetch, et le fetch nu",
-      intention:
+      rank: "Données",
+      title: "useEffect + fetch, et le fetch nu",
+      intent:
         "Les queryOptions sont générées par hey-api : les écrire à la main, ou pire les contourner, c'est perdre le typage et le cache d'un coup.",
-      langage: "tsx",
+      language: "tsx",
       source: "reactony.md §10",
-      surligne: [2, 3, 4, 7],
+      highlightedLines: [2, 3, 4, 7],
       code: `// Non.
 useEffect(() => {
   fetch("/api/search-alerts").then((r) => r.json()).then(setSearchAlerts);
@@ -518,13 +518,13 @@ const { data } = useQuery({ ...getSearchAlertListOptions({ query: filters }) });
     },
     {
       id: "422",
-      rang: "Formulaire",
-      titre: "Une mutation sans handleSdkError",
-      intention:
+      rank: "Formulaire",
+      title: "Une mutation sans handleSdkError",
+      intent:
         "Les 422 sont silencieusement perdus pour l'utilisateur : le formulaire ne bouge pas, aucun champ ne rougit, rien n'explique.",
-      langage: "tsx",
+      language: "tsx",
       source: "reactony.md §10 · §3",
-      surligne: [2, 3],
+      highlightedLines: [2, 3],
       code: `// Non.
 const mutation = useMutation({ mutationFn: postSearchAlert });
 
@@ -541,14 +541,14 @@ if (errors) {
     },
     {
       id: "stimulus",
-      rang: "Twig",
-      titre: "Un nouveau contrôleur Stimulus",
-      intention:
+      rank: "Twig",
+      title: "Un nouveau contrôleur Stimulus",
+      intent:
         "Stimulus n'est que le pont de montage. Un contrôleur avec du state, un fetch, de la logique : c'est un îlot React.",
-      langage: "twig",
+      language: "twig",
       source: "reactony.md §6 · §10",
-      surligne: [1, 2, 3, 4],
-      piege:
+      highlightedLines: [1, 2, 3, 4],
+      pitfall:
         'Une tolérance : un comportement DOM sans état, sous une trentaine de lignes, un copier-dans-le-presse-papier par exemple, où un îlot serait disproportionné. Et réactiver Turbo Drive sans décision explicite remonte les îlots React et leur fait perdre leur état. Le site est délibérément en data-turbo="false".',
       code: `{# Le montage, et rien d'autre. #}
 <div {{ react_component('SearchAlertForm', {
@@ -557,14 +557,14 @@ if (errors) {
     },
     {
       id: "query-order",
-      rang: "Doctrine",
-      titre: "Une requête sans ORDER BY n'a pas d'ordre",
-      intention:
+      rank: "Doctrine",
+      title: "Une requête sans ORDER BY n'a pas d'ordre",
+      intent:
         "Postgres rend les lignes dans l'ordre qui l'arrange, et il change avec le plan. Le tri stable se déclare.",
-      langage: "php",
+      language: "php",
       source: "symfony-guidelines.md §7",
-      surligne: [6],
-      piege:
+      highlightedLines: [6],
+      pitfall:
         "KnpPaginator place son propre tri devant le vôtre : le tri par défaut se passe en option du paginateur, pas seulement dans le QueryBuilder.",
       code: `<?php
 
@@ -578,15 +578,15 @@ return $this->createQueryBuilder('a')
     },
     {
       id: "secret-log",
-      rang: "Logs",
-      titre: "Un secret en query string finit dans les logs",
-      intention:
+      rank: "Logs",
+      title: "Un secret en query string finit dans les logs",
+      intent:
         "HttpClient journalise chaque appel en INFO avec l'URL complète, query string comprise. Une API amont qui s'authentifie par un paramètre key ou token écrit donc son propre identifiant dans les logs, et dans les breadcrumbs Sentry.",
-      fichier: "src/Logger/RedactQueryStringSecretsProcessor.php",
-      langage: "php",
+      file: "src/Logger/RedactQueryStringSecretsProcessor.php",
+      language: "php",
       source: "symfony-guidelines.md, Logging & Sentry",
-      surligne: [5, 9, 10, 11],
-      piege:
+      highlightedLines: [5, 9, 10, 11],
+      pitfall:
         "Le contrat appartient à l'amont, donc le paramètre ne peut en général pas passer en en-tête : on caviarde à la sortie. Et avec un handler fingers_crossed, ces lignes INFO remontent dès que quoi que ce soit d'autre échoue dans la même requête, c'est-à-dire précisément quand l'amont est instable.",
       code: `<?php
 
@@ -612,12 +612,12 @@ final class RedactQueryStringSecretsProcessor
   ],
 };
 
-export const SYMFONY_REACT: Pile = {
+export const SYMFONY_REACT: Stack = {
   id: "symfony-react",
   label: "Symfony, îlots React",
-  labelCourt: "Symfony + React",
-  these:
+  shortLabel: "Symfony + React",
+  thesis:
     "Twig rend les pages, React prend la main là où il faut de l'interaction. PHP est la source de vérité, les types TS en descendent.",
   guideline: "symfony-react/symfony-guidelines.md et reactony.md",
-  pistes: [featureFullstack, patterns, pieges],
+  tracks: [featureFullstack, patterns, pieges],
 };

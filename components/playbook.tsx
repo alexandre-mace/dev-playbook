@@ -6,94 +6,96 @@ import { useEffect, useRef, useState } from "react";
 import { Deck } from "@/components/deck";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TextLink } from "@/components/ui/text-link";
-import type { PileColoree } from "@/lib/playbook/rendu";
+import type { HighlightedStack } from "@/lib/playbook/render";
 import { SOURCE } from "@/lib/site";
 
 /** L'ancre porte la pile, la piste et l'écran : un lien tombe au bon endroit. */
-function lireAncre(piles: PileColoree[]) {
-  const [pileId, pisteId, rang] = window.location.hash.slice(1).split("/");
-  const pile = piles.find((candidate) => candidate.id === pileId);
-  const piste = pile?.pistes.find((candidate) => candidate.id === pisteId);
-  if (!pile || !piste) return null;
+function readAnchor(stacks: HighlightedStack[]) {
+  const [stackId, trackId, rank] = window.location.hash.slice(1).split("/");
+  const stack = stacks.find((candidate) => candidate.id === stackId);
+  const track = stack?.tracks.find((candidate) => candidate.id === trackId);
+  if (!stack || !track) return null;
 
-  const index = Number(rang);
+  const index = Number(rank);
   return {
-    pileId: pile.id,
-    pisteId: piste.id,
-    ecran: Number.isInteger(index)
-      ? Math.min(Math.max(index, 0), piste.ecrans.length - 1)
+    stackId: stack.id,
+    trackId: track.id,
+    screen: Number.isInteger(index)
+      ? Math.min(Math.max(index, 0), track.screens.length - 1)
       : 0,
   };
 }
 
-export function Playbook({ piles }: { piles: PileColoree[] }) {
-  const [pileId, setPileId] = useState(piles[0].id);
-  const [pisteId, setPisteId] = useState(piles[0].pistes[0].id);
+export function Playbook({ stacks }: { stacks: HighlightedStack[] }) {
+  const [stackId, setStackId] = useState(stacks[0].id);
+  const [trackId, setTrackId] = useState(stacks[0].tracks[0].id);
   /** Position par piste, pour revenir là où on avait laissé. */
   const positions = useRef<Record<string, number>>({});
   /** Incrémenté à la restauration d'ancre, pour forcer un remontage du deck. */
   const [revision, setRevision] = useState(0);
   /** Passe à vrai au premier changement d'onglet, et le deck prend alors le focus. */
-  const [focusAuMontage, setFocusAuMontage] = useState(false);
+  const [focusOnMount, setFocusOnMount] = useState(false);
 
   useEffect(() => {
-    const ancre = lireAncre(piles);
-    if (!ancre) return;
+    const anchor = readAnchor(stacks);
+    if (!anchor) return;
 
-    positions.current[`${ancre.pileId}/${ancre.pisteId}`] = ancre.ecran;
-    setPileId(ancre.pileId);
-    setPisteId(ancre.pisteId);
-    setRevision((precedent) => precedent + 1);
-  }, [piles]);
+    positions.current[`${anchor.stackId}/${anchor.trackId}`] = anchor.screen;
+    setStackId(anchor.stackId);
+    setTrackId(anchor.trackId);
+    setRevision((previous) => previous + 1);
+  }, [stacks]);
 
-  const pile = piles.find((candidate) => candidate.id === pileId) ?? piles[0];
-  const piste =
-    pile.pistes.find((candidate) => candidate.id === pisteId) ?? pile.pistes[0];
-  const cle = `${pile.id}/${piste.id}`;
+  const stack =
+    stacks.find((candidate) => candidate.id === stackId) ?? stacks[0];
+  const track =
+    stack.tracks.find((candidate) => candidate.id === trackId) ??
+    stack.tracks[0];
+  const trackKey = `${stack.id}/${track.id}`;
 
   /** L'ancre suit tout ce qui change : la pile, la piste, l'écran. */
-  function ecrireAncre(cleVisee: string, index: number) {
-    window.history.replaceState(null, "", `#${cleVisee}/${index}`);
+  function writeAnchor(key: string, index: number) {
+    window.history.replaceState(null, "", `#${key}/${index}`);
   }
 
-  function noterPosition(index: number) {
-    positions.current[cle] = index;
-    ecrireAncre(cle, index);
+  function recordPosition(index: number) {
+    positions.current[trackKey] = index;
+    writeAnchor(trackKey, index);
   }
 
-  function changerDePile(valeur: string) {
-    setFocusAuMontage(true);
-    setPileId(valeur);
-    const cleVisee = `${valeur}/${pisteId}`;
-    ecrireAncre(cleVisee, positions.current[cleVisee] ?? 0);
+  function changeStack(value: string) {
+    setFocusOnMount(true);
+    setStackId(value);
+    const targetKey = `${value}/${trackId}`;
+    writeAnchor(targetKey, positions.current[targetKey] ?? 0);
   }
 
-  function changerDePiste(valeur: string) {
-    setFocusAuMontage(true);
-    setPisteId(valeur);
-    const cleVisee = `${pileId}/${valeur}`;
-    ecrireAncre(cleVisee, positions.current[cleVisee] ?? 0);
+  function changeTrack(value: string) {
+    setFocusOnMount(true);
+    setTrackId(value);
+    const targetKey = `${stackId}/${value}`;
+    writeAnchor(targetKey, positions.current[targetKey] ?? 0);
   }
 
   return (
     <Tabs
-      value={pileId}
-      onValueChange={(valeur) => changerDePile(valeur as string)}
+      value={stackId}
+      onValueChange={(value) => changeStack(value as string)}
     >
       <TabsList className="max-w-full overflow-x-auto">
-        {piles.map((candidate) => (
+        {stacks.map((candidate) => (
           <TabsTrigger key={candidate.id} value={candidate.id} className="px-3">
             <span className="hidden sm:inline">{candidate.label}</span>
-            <span className="sm:hidden">{candidate.labelCourt}</span>
+            <span className="sm:hidden">{candidate.shortLabel}</span>
           </TabsTrigger>
         ))}
       </TabsList>
 
-      {piles.map((candidate) => (
+      {stacks.map((candidate) => (
         <TabsContent key={candidate.id} value={candidate.id} className="mt-3">
           <p className="max-w-4xl text-sm leading-relaxed text-pretty text-muted-foreground">
             <span className="font-medium text-foreground">
-              {candidate.these}
+              {candidate.thesis}
             </span>{" "}
             <TextLink
               href={`${SOURCE}/blob/main/${candidate.guideline.split(" ")[0]}`}
@@ -107,41 +109,41 @@ export function Playbook({ piles }: { piles: PileColoree[] }) {
           </p>
 
           <Tabs
-            value={pisteId}
-            onValueChange={(valeur) => changerDePiste(valeur as string)}
+            value={trackId}
+            onValueChange={(value) => changeTrack(value as string)}
             className="mt-4"
           >
             <TabsList className="max-w-full overflow-x-auto">
-              {candidate.pistes.map((candidatePiste) => (
+              {candidate.tracks.map((candidateTrack) => (
                 <TabsTrigger
-                  key={candidatePiste.id}
-                  value={candidatePiste.id}
+                  key={candidateTrack.id}
+                  value={candidateTrack.id}
                   className="px-3"
                 >
-                  {candidatePiste.label}
+                  {candidateTrack.label}
                   <span className="ml-1.5 font-mono text-[11px] text-muted-foreground">
-                    {candidatePiste.ecrans.length}
+                    {candidateTrack.screens.length}
                   </span>
                 </TabsTrigger>
               ))}
             </TabsList>
 
-            {candidate.pistes.map((candidatePiste) => (
+            {candidate.tracks.map((candidateTrack) => (
               <TabsContent
-                key={candidatePiste.id}
-                value={candidatePiste.id}
+                key={candidateTrack.id}
+                value={candidateTrack.id}
                 className="mt-3"
               >
                 {/* Base UI garde un panneau monté après sa première activation.
                     Sans cette garde, chaque piste deja vue laisserait un deck vivant
                     derriere elle, qui écouterait les flèches et écrirait l'ancre. */}
-                {candidate.id === pileId && candidatePiste.id === pisteId && (
+                {candidate.id === stackId && candidateTrack.id === trackId && (
                   <Deck
-                    key={`${cle}-${revision}`}
-                    focusAuMontage={focusAuMontage}
-                    ecrans={candidatePiste.ecrans}
-                    depart={positions.current[cle] ?? 0}
-                    onPosition={noterPosition}
+                    key={`${trackKey}-${revision}`}
+                    focusOnMount={focusOnMount}
+                    screens={candidateTrack.screens}
+                    start={positions.current[trackKey] ?? 0}
+                    onPosition={recordPosition}
                   />
                 )}
               </TabsContent>
