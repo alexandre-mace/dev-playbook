@@ -14,7 +14,7 @@ const featureFullstack = {
         "PHP est la source de vérité. Les types et la validation vivent sur l'entité, et tout le reste en découle.",
       file: "src/Entity/SearchAlert.php",
       language: "php",
-      source: "symfony-guidelines.md, Playbook 1 · reactony.md §2",
+      source: "symfony-guidelines.md, Playbook 1, reactony.md §2",
       highlightedLines: [7, 8, 9],
       pitfall:
         "Charge utile 1:1 avec l'entité : l'entité directement. Sous-ensemble d'une grosse entité : un DTO allowlist plus ObjectMapper, pour la sécurité. Rien qui corresponde à une entité : un DTO simple.",
@@ -44,7 +44,7 @@ class SearchAlert
       intent:
         "Pas de migration écrite à la main : le hook de déploiement applique le schéma. On relit donc le SQL qu'il va jouer avant de commiter.",
       language: "bash",
-      source: "symfony-guidelines.md, Playbook 1 · §19",
+      source: "symfony-guidelines.md, Playbook 1, §19",
       highlightedLines: [2],
       pitfall:
         "Une colonne qui se durcit (non nullable, unique) sur des lignes existantes fait échouer la mise à jour, donc le déploiement. La commande de back-fill se branche dans le hook, au-dessus de la ligne du schéma.",
@@ -62,7 +62,7 @@ php bin/console doctrine:schema:validate --skip-sync`,
         "format: 'json' est obligatoire, #[IsGranted] aussi. Le contrôleur oriente : Domain décide, Service exécute.",
       file: "src/Controller/SearchAlertController.php",
       language: "php",
-      source: "symfony-guidelines.md §3 · Playbook 2",
+      source: "symfony-guidelines.md §3, Playbook 2",
       highlightedLines: [3, 4, 5],
       pitfall:
         "Sans format: 'json', les erreurs 422 arrivent en HTML et le frontend ne sait plus les parser. Et un docblock en prose fuit dans le summary OpenAPI, donc dans le JSDoc du SDK : le garder en tags seulement.",
@@ -89,7 +89,7 @@ public function create(
         "Dès qu'il y a une décision (un seuil, une éligibilité, un calcul), elle sort du contrôleur. Domain décide sans rien connaître d'extérieur, Service exécute, le contrôleur relie les deux.",
       file: "src/Domain/SearchAlert/SearchAlertRules.php",
       language: "php",
-      source: "symfony-guidelines.md, Principes · §2 · §15",
+      source: "symfony-guidelines.md, Principes, §2, §15",
       highlightedLines: [7, 8, 16],
       pitfall:
         "Un Domain qui injecte l'EntityManager ou un client HTTP n'est plus un Domain : il ne se teste plus sans mocks. La règle reçoit des valeurs, elle rend une décision.",
@@ -120,7 +120,7 @@ if (!$this->rules->canCreate($count)) {
         "Une commande, et le contrat PHP devient des types TS, du Zod, un SDK et les queryOptions. Rien n'est écrit à la main de ce côté.",
       file: "Makefile",
       language: "makefile",
-      source: "symfony-guidelines.md, Playbook 3 · reactony.md §5",
+      source: "symfony-guidelines.md, Playbook 3, reactony.md §5",
       highlightedLines: [5],
       pitfall:
         "openapi.yaml et assets/lib/api/ sont commités : la porte de dérive compare le généré au commité, et git diff --exit-code ne verrait rien s'ils étaient ignorés.",
@@ -171,7 +171,7 @@ await postSearchAlert({ body: values });`,
         "Twig rend la page, React ne prend que l'îlot interactif. Les données initiales descendent en props, sérialisées avec les mêmes groupes que l'API.",
       file: "templates/search_alert/index.html.twig",
       language: "twig",
-      source: "symfony-guidelines.md, Playbook 4 · reactony.md §6",
+      source: "symfony-guidelines.md, Playbook 4, reactony.md §6",
       highlightedLines: [4, 5, 6],
       pitfall:
         "Chaque îlot est enveloppé une fois dans un AppProviders (QueryClientProvider et Toaster) : sans lui, le premier useMutation plante au rendu, et le toast ne s'affiche nulle part.",
@@ -196,7 +196,7 @@ await postSearchAlert({ body: values });`,
         "Un seul patron de formulaire : Controller de RHF, la famille Field de shadcn, le Zod généré, useMutation. Le 422 revient champ par champ.",
       file: "assets/components/search-alert-form.tsx",
       language: "tsx",
-      source: "reactony.md §4 · §3",
+      source: "reactony.md §4, §3",
       highlightedLines: [9, 15, 16, 17],
       pitfall:
         "Les deux clés : data-invalid sur <Field>, qui bascule le bloc entier en état d'erreur, et aria-invalid sur le contrôle. Le vieux <Form>/<FormField>/<FormMessage> est toléré dans l'existant, pas pour du neuf.",
@@ -268,7 +268,7 @@ const mutation = useMutation({
       intent:
         "Toute mutation qui change une donnée lue ailleurs invalide, dans son onSuccess, avec les mêmes queryOptions générées.",
       language: "tsx",
-      source: "reactony.md §4 · Playbook 5",
+      source: "reactony.md §4, Playbook 5",
       highlightedLines: [6, 7],
       code: `import { getSearchAlertListOptions } from "@/lib/api";
 
@@ -288,7 +288,7 @@ const mutation = useMutation({
         "Ce qu'une nouvelle route et un nouveau parcours doivent, par rendement décroissant.",
       file: "tests/Functional/SearchAlertControllerTest.php",
       language: "php",
-      source: "symfony-guidelines.md, Playbook 6 · §13",
+      source: "symfony-guidelines.md, Playbook 6, §13",
       highlightedLines: [9, 14],
       pitfall:
         "Le calcul d'argent (frais, paliers, tranches) part avec un test basé sur les propriétés, via Eris : les cas limites d'arrondi ne se trouvent pas à la main.",
@@ -390,7 +390,7 @@ public function withPrice(Money $price): static { /* ... */ }`,
       intent:
         "Le seul cas où un DTO se justifie d'office : des filtres ne sont pas une entité.",
       language: "php",
-      source: "reactony.md §1 · symfony-guidelines.md §4",
+      source: "reactony.md §1, symfony-guidelines.md §4",
       highlightedLines: [5, 7],
       code: `<?php
 
@@ -434,7 +434,7 @@ final class PartialProfileDto
       intent:
         "Un DTO plat avec un ?UploadedFile et son Assert\\File, par MapRequestPayload. L'identifiant vit dans la route.",
       language: "php",
-      source: "symfony-guidelines.md §4 · reactony.md §2",
+      source: "symfony-guidelines.md §4, reactony.md §2",
       highlightedLines: [6, 7],
       pitfall:
         "Côté frontend, garder file.size aligné sur maxSize : au-delà de upload_max_filesize, le SAPI PHP jette silencieusement, le résolveur rend un 422 vide et le toast reste muet.",
@@ -523,7 +523,7 @@ const { data } = useQuery({ ...getSearchAlertListOptions({ query: filters }) });
       intent:
         "Les 422 sont silencieusement perdus pour l'utilisateur : le formulaire ne bouge pas, aucun champ ne rougit, rien n'explique.",
       language: "tsx",
-      source: "reactony.md §10 · §3",
+      source: "reactony.md §10, §3",
       highlightedLines: [2, 3],
       code: `// Non.
 const mutation = useMutation({ mutationFn: postSearchAlert });
@@ -546,7 +546,7 @@ if (errors) {
       intent:
         "Stimulus n'est que le pont de montage. Un contrôleur avec du state, un fetch, de la logique : c'est un îlot React.",
       language: "twig",
-      source: "reactony.md §6 · §10",
+      source: "reactony.md §6, §10",
       highlightedLines: [1, 2, 3, 4],
       pitfall:
         'Une tolérance : un comportement DOM sans état, sous une trentaine de lignes, un copier-dans-le-presse-papier par exemple, où un îlot serait disproportionné. Et réactiver Turbo Drive sans décision explicite remonte les îlots React et leur fait perdre leur état. Le site est délibérément en data-turbo="false".',

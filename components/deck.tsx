@@ -137,17 +137,25 @@ export function Deck({
 
         <div className="flex flex-1 items-center gap-1.5" aria-hidden="true">
           {screens.map((screen, rank) => (
+            // La barre reste fine à l'œil, mais le bouton fait 24px de haut :
+            // WCAG 2.5.8 mesure la cible, pas le trait qu'on y voit.
             <button
               key={screen.id}
               type="button"
               tabIndex={-1}
               title={`${rank + 1}. ${screen.title}`}
               onClick={() => embla?.scrollTo(rank)}
-              className={cn(
-                "h-1 flex-1 rounded-full transition-colors",
-                rank === index ? "bg-primary" : "bg-border hover:bg-primary/40",
-              )}
-            />
+              className="group/segment flex h-6 flex-1 items-center"
+            >
+              <span
+                className={cn(
+                  "h-1 w-full rounded-full transition-colors",
+                  rank === index
+                    ? "bg-primary"
+                    : "bg-border group-hover/segment:bg-primary/40",
+                )}
+              />
+            </button>
           ))}
         </div>
 

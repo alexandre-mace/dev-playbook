@@ -47,7 +47,7 @@ function Tasks() {
         "La route rend depuis le cache puis revalide, au lieu de bloquer sur une cascade de requêtes lancées dans les composants.",
       file: "src/routes/tasks.tsx",
       language: "tsx",
-      source: "tanstack-start-guidelines.md, Patterns · §2",
+      source: "tanstack-start-guidelines.md, Patterns, §2",
       highlightedLines: [6, 8],
       code: `import { convexQuery } from "@convex-dev/react-query";
 
@@ -90,7 +90,7 @@ export default defineSchema({
         "Le schéma génère le modèle de données et les constructeurs de fonctions. Le routeur génère son arbre. Les deux se commitent, aucun des deux ne s'édite.",
       file: "convex/_generated/",
       language: "ts",
-      source: "tanstack-start-guidelines.md §3 · §1",
+      source: "tanstack-start-guidelines.md §3, §1",
       highlightedLines: [10, 11, 12, 18],
       pitfall:
         "Un api.tasks.listMine qui cesse de compiler après un renommage, ce n'est pas le générateur qui casse : c'est lui qui montre les appels devenus faux. C'est tout l'intérêt de commiter ce qu'il écrit.",
@@ -121,7 +121,7 @@ useSuspenseQuery(convexQuery(api.tasks.list, {}));`,
         "Les arguments sont validés par args avant même le handler. Le handler vérifie ensuite la session, puis l'autorisation sur le document visé : une identité n'est pas une autorisation.",
       file: "convex/tasks.ts",
       language: "ts",
-      source: "tanstack-start-guidelines.md §3 · §3 bis",
+      source: "tanstack-start-guidelines.md §3, §3 bis",
       highlightedLines: [8, 14, 27, 31],
       pitfall:
         "Convex renvoie ce que la fonction retourne : rendre le document entier le publie entier. On sélectionne les champs. Ce qui n'est pas destiné au client se déclare internalQuery ou internalMutation.",
@@ -235,7 +235,7 @@ function Tasks() {
         "TanStack Form côté client, et la mutation Convex valide avec le même schéma Zod grâce à convex-helpers. On valide au bord, une fois, et le type inféré descend de là.",
       file: "convex/schemas.ts, convex/tasks.ts, src/routes/tasks.new.tsx",
       language: "tsx",
-      source: "tanstack-start-guidelines.md, Playbook · §2",
+      source: "tanstack-start-guidelines.md, Playbook, §2",
       highlightedLines: [2, 7, 20],
       code: `// convex/schemas.ts : du Zod pur, importé des deux côtés.
 export const taskSchema = z.object({ title: z.string().min(1).max(120) });
@@ -284,7 +284,7 @@ function NewTask() {
         "Du RPC typé, validé au bord, appelable depuis un loader ou un composant. Pour une opération ponctuelle : un appel tiers, un secret.",
       file: "src/server/invoice.ts",
       language: "ts",
-      source: "tanstack-start-guidelines.md, Patterns · §3 bis",
+      source: "tanstack-start-guidelines.md, Patterns, §3 bis",
       highlightedLines: [9, 14, 19],
       pitfall:
         "Elle compile en route publique appelable avec n'importe quel payload. Garder la route qui rend l'interface ne garde rien : la vérification est dans la fonction.",

@@ -59,11 +59,11 @@ un `lib/utils.ts` réduit à `export { cn } from "cn"` depuis la CLI 4.21.
 **Idéal** : les versions de référence de l'en-tête « Last watch » du 29 septembre 2026.
 **Actuel** : quatre outils derrière, sans conséquence de sécurité connue.
 
-- [ ] `package.json` : TypeScript `^5` (5.9.3 installé) au lieu de 7.0 (sûr)
+- [x] `package.json` : TypeScript `^5` (5.9.3 installé) au lieu de 7.0 (sûr)
   - `next build` type-check avec TypeScript 7 depuis 16.3. La migration passe par 6.0 d'abord, la procédure est dans `symfony-react/reactony.md` §8.
-- [ ] `package.json` : Biome 2.4.2 au lieu de 2.5 (sûr)
-- [ ] `package.json` : `@base-ui/react` 1.7.0 au lieu de 1.8 (sûr)
-- [ ] `package.json` : React 19.2.8 au lieu de 19.3 (sûr)
+- [x] `package.json` : Biome 2.4.2 au lieu de 2.5 (sûr)
+- [x] `package.json` : `@base-ui/react` 1.7.0 au lieu de 1.8 (sûr)
+- [x] `package.json` : React 19.2.8 au lieu de 19.3 (sûr)
   - 19.3 rend les transitions indépendantes séparément au lieu de les regrouper. Le deck n'utilise pas `startTransition`, donc rien à vérifier côté comportement.
 
 ## 5. Un `Omit` qui n'omet rien (Moyenne priorité)
@@ -82,7 +82,7 @@ un `lib/utils.ts` réduit à `export { cn } from "cn"` depuis la CLI 4.21.
 en audit.
 **Actuel** : ni `.husky/`, ni `.github/workflows/`, et `pnpm lint` se limite à Biome.
 
-- [ ] racine du dépôt : la famille du point médian revient à chaque audit sans rien pour l'arrêter (sûr)
+- [x] racine du dépôt : la famille du point médian revient à chaque audit sans rien pour l'arrêter (sûr)
   - 29 occurrences de `·` comme séparateur, détaillées en 9.2. `agent/writing.md` l'interdit, rien ne le refuse.
   - Un script de quelques lignes lancé par `pnpm lint` suffit ici : la stack Next n'a pas d'équivalent de `bin/check-mechanical`, et ce dépôt n'a pas de hook de commit.
 
@@ -92,10 +92,12 @@ en audit.
 dans `components/icons.tsx`. §4, `app/apple-icon.png` en 180×180 accompagne `app/icon.svg`.
 **Actuel** : le mark GitHub est inline dans l'en-tête, et l'icône iOS manque.
 
-- [ ] `components/header.tsx:4-14` : `GithubMark` défini dans le fichier qui l'utilise (sûr)
+- [x] `components/header.tsx:4-14` : `GithubMark` défini dans le fichier qui l'utilise (sûr)
   - Sa place est `components/icons.tsx`, qui n'existe pas encore.
-- [ ] `app/` : pas d'`apple-icon.png` (sûr)
-  - 180×180, pour l'écran d'accueil iOS. Next émet la balise tout seul.
+- [x] `app/apple-icon.tsx` : ajouté, en 180×180 (sûr)
+  - En `ImageResponse` plutôt qu'en PNG statique, pour le même motif que l'icône : l'emoji se rastérise au build. Vérifié servi en PNG 180×180.
+- [x] `app/icon.svg` : l'emoji vivait dans un `<text>` SVG (sûr)
+  - Trouvé en corrigeant l'icône iOS, pas au premier passage. `next-guidelines.md` §4 demande un `icon.tsx` en `ImageResponse` quand l'icône dérive d'un emoji, précisément parce qu'un `<text>` emoji s'affiche avec la police du système. Remplacé par `app/icon.tsx`, servi en PNG 64×64.
 
 ## 8. `shadcn/tailwind.css` non importé (Basse priorité)
 
@@ -105,7 +107,7 @@ dans `components/icons.tsx`. §4, `app/apple-icon.png` en 180×180 accompagne `a
 **Actuel** : `app/globals.css:1` n'importe que `tailwindcss`, et le paquet `shadcn` n'est
 pas installé.
 
-- [ ] `app/globals.css:1` : risque latent, pas encore un défaut (sûr)
+- [x] `app/globals.css:2-5` : importé, le risque latent est fermé (sûr)
   - Vérifié : le code n'utilise qu'une seule variante nue, `data-active:`, onze fois. `node_modules/@base-ui/react/tabs/tab/TabsTabDataAttributes.js` documente `data-active` comme « Present when the tab is active », sans valeur, donc le `[data-active]` natif de Tailwind le capte correctement. Les onglets fonctionnent.
   - Ce qui casserait : `data-orientation` porte une valeur, et `tabs.tsx` l'écrit déjà en forme explicite `group-data-[orientation=horizontal]`. Mais le jour où un composant du registry arrive avec `data-horizontal:` ou `data-selected:`, la règle tombe en silence. C'est le défaut décrit dans la guideline : un panneau d'onglets à zéro pixel de large, sur toutes les pages.
   - Soit `@import "shadcn/tailwind.css"` avec `shadcn` en dépendance de développement, soit le fichier vendu à côté de `globals.css`.
@@ -117,7 +119,7 @@ pas installé.
 **Idéal** : les couleurs vivent une fois, dans les tokens de `:root`.
 **Actuel** : l'image OG les recopie.
 
-- [ ] `app/opengraph-image.tsx:18,22,29,33` : `#FAF8F0`, `#0737FF`, `#6b6a63` en dur (sûr)
+- [x] `app/opengraph-image.tsx:18,22,29,33` : `#FAF8F0`, `#0737FF`, `#6b6a63` en dur (sûr)
   - `ImageResponse` n'a pas de feuille de style, donc la valeur littérale est inévitable. Ce qui ne l'est pas, c'est qu'elle soit écrite ici : `#FAF8F0` est le `--background` de `app/globals.css:9` et `#0737FF` son `--primary` de la ligne 18. Changer le thème laisse l'image OG derrière, sans bruit.
   - Les sortir en constantes de `lib/site.ts`, lues des deux côtés.
 
@@ -126,9 +128,9 @@ pas installé.
 **Idéal** : `agent/writing.md`, section Typography, pas de point médian comme séparateur.
 **Actuel** : 29 occurrences.
 
-- [ ] `lib/playbook/symfony-react.ts` (13), `next.ts` (9), `tanstack-start.ts` (5) : champs `source` du type `"symfony-guidelines.md, Playbook 1 · reactony.md §2"` (sûr)
-- [ ] `app/opengraph-image.tsx:34` : `"Symfony + React · Next.js · TanStack Start"` (sûr)
-- [ ] `app/layout.tsx:11` : le gabarit de titre `` `%s · ${TITLE}` `` (sûr)
+- [x] `lib/playbook/symfony-react.ts` (13), `next.ts` (9), `tanstack-start.ts` (5) : champs `source` du type `"symfony-guidelines.md, Playbook 1 · reactony.md §2"` (sûr)
+- [x] `app/opengraph-image.tsx:34` : `"Symfony + React · Next.js · TanStack Start"` (sûr)
+- [x] `app/layout.tsx:11` : le gabarit de titre `` `%s · ${TITLE}` `` (sûr)
   - La guideline autorise le tiret demi-cadratin pour joindre une page et le site dans un titre, « Annonces – La Grange ». C'est exactement ce cas.
 
 ### 9.3 Cibles tactiles de la réglette
@@ -137,12 +139,16 @@ pas installé.
 (WCAG 2.2, critère 2.5.8, niveau AA).
 **Actuel** : les segments de progression font 4 pixels de haut.
 
-- [ ] `components/deck.tsx:150` : `h-1 flex-1` sur des `<button>` cliquables (probable)
+- [x] `components/deck.tsx:150` : `h-1 flex-1` sur des `<button>` cliquables (probable)
   - Les segments sont `aria-hidden` et `tabIndex={-1}`, donc hors de l'arbre d'accessibilité et hors tabulation : au clavier, seules les flèches pilotent le deck. Le critère tolère qu'une autre commande de la page rende le même service, et les deux boutons de 32 px le font.
   - L'équivalence n'est pourtant que partielle : les flèches avancent d'un écran, la réglette saute au septième. Au doigt, cette seconde fonction n'est pas atteignable.
   - Le moins coûteux : garder la barre fine à l'œil et élargir la zone cliquable par un `py-2` plus un fond transparent, sans changer l'aspect.
 
 ## Écarts assumés
+
+- `package.json` : Biome épinglé en **2.5.14**, pas en 2.5.15. La 2.5.15 panique sur tout `.gitignore` non vide quand `vcs.useIgnoreFile` est à vrai, `path is expected to be under the root`, depuis `ignore-0.4.25/src/gitignore.rs:232`. Bissecté : 2.5.10 à 2.5.14 passent, 2.5.15 non, et un `.gitignore` vide suffit à faire disparaître la panique quelles que soient les `includes`. C'est un bug amont, pas notre config, et le contourner en passant `useIgnoreFile` à faux reviendrait à cacher un plantage. À relever au prochain `/gap-sota`.
+- `biome.json` : `public/` est écarté du linter. Biome 2.5 lit désormais les SVG, et `noSvgWithoutTitle` réclame un `<title>` sur `public/mark.svg`. Ce fichier n'est rendu que par `<Brand>`, en `alt=""`, donc décoratif : lui donner un titre le ferait annoncer en double avec le nom de la marque, ce que `react-guidelines.md` §6 interdit explicitement.
+- `app/icon.tsx` et `app/apple-icon.tsx` : le rendu de l'emoji va chercher la police Noto sur un CDN au build. Mesuré, le premier build froid passe de 2 s à 26 s, les suivants retombent à 1,5 s de génération statique. Vercel repart froid à chaque déploiement, donc il paie cette seconde fois, sur des builds qui durent déjà 21 à 36 s. Le prix d'un emoji qui se dessine pareil partout.
 
 - `components/code-block.tsx:68` : `dangerouslySetInnerHTML` sur le HTML de Shiki. `react-guidelines.md` §4 réserve l'échappatoire au markup produit par le projet : c'est le cas, le HTML est produit au build à partir de constantes du dépôt, aucune entrée utilisateur n'y arrive. La raison est déjà écrite dans le `biome-ignore` au-dessus de la ligne.
 - `components/brand.tsx` et `components/made-with-love.tsx` portent `"use client"` sans tenir d'état ni d'interaction, là où `next-guidelines.md` §4 réserve la directive à ce qui en tient. Les deux viennent du registry `@alexandremace` et `biome.json` les exclut : la correction appartient au kit, pas à ce dépôt. À remonter par `/propagate-kit` plutôt qu'à corriger ici.

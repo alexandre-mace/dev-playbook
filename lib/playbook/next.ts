@@ -128,7 +128,7 @@ export type Emission = (typeof EMISSIONS)[number];`,
         "Le composant client descend le plus bas possible dans l'arbre. Sa page reste un Server Component et lui passe la donnée cuite en props.",
       file: "components/simulator.tsx",
       language: "tsx",
-      source: "next-guidelines.md, Playbook · react-guidelines.md §2",
+      source: "next-guidelines.md, Playbook, react-guidelines.md §2",
       highlightedLines: [1, 12],
       pitfall:
         "Pas de useMemo ni de useCallback : le compilateur les place. En écrire à la main n'est plus une optimisation, c'est du bruit qui devient no-op.",
@@ -161,7 +161,7 @@ export function Simulator({ scale }: { scale: readonly Emission[] }) {
         "Démonter un panneau caché lui fait perdre son état, son DOM et sa position de scroll. Activity le garde, et nettoie quand même les Effects.",
       file: "components/simulator-tabs.tsx",
       language: "tsx",
-      source: "next-guidelines.md, Patterns · react-guidelines.md §1",
+      source: "next-guidelines.md, Patterns, react-guidelines.md §1",
       highlightedLines: [10, 13],
       pitfall:
         "Un panneau caché par Activity est en display:none. Toute librairie qui mesure le DOM au montage (un carrousel, un graphe) doit se réinitialiser quand il redevient visible.",
@@ -226,7 +226,7 @@ export async function renameProject(input: unknown) {
         "CSP, X-Content-Type-Options, Referrer-Policy, Strict-Transport-Security. Leur absence est silencieuse, donc c'est un constat de /gap-code à lui seul.",
       file: "next.config.ts",
       language: "ts",
-      source: "next-guidelines.md §6 bis · §1",
+      source: "next-guidelines.md §6 bis, §1",
       highlightedLines: [7, 24],
       pitfall:
         "images.remotePatterns avec hostname: \"**\" laisse n'importe qui router ses images par l'optimiseur du site. On liste les hôtes réels.",
@@ -336,7 +336,7 @@ const patterns = {
         "Stable depuis la 1.0, sortie d'expérimental depuis Next 16. Une clé dans la config et une devDependency.",
       file: "next.config.ts",
       language: "ts",
-      source: "next-guidelines.md, Patterns · react-guidelines.md §2",
+      source: "next-guidelines.md, Patterns, react-guidelines.md §2",
       pitfall:
         "Les règles de lint viennent de eslint-plugin-react-hooks >= 7. Le paquet eslint-plugin-react-compiler est gelé : ne pas l'installer.",
       code: `import type { NextConfig } from "next";
@@ -357,7 +357,7 @@ export default nextConfig;
       intent:
         "Sortir d'un Effect la logique qui lit des props ou du state sans les déclarer en dépendances. Stable depuis 19.2.",
       language: "tsx",
-      source: "next-guidelines.md, Patterns · react-guidelines.md §1",
+      source: "next-guidelines.md, Patterns, react-guidelines.md §1",
       highlightedLines: [6, 12],
       pitfall:
         "Jamais dans le tableau de dépendances, et jamais appelé hors de l'Effect qui le possède.",
@@ -388,7 +388,7 @@ export function Tracking({ url, theme }: { url: string; theme: string }) {
         "Le fichier middleware est déprécié et renommé. Même signature, même config, même emplacement racine.",
       file: "proxy.ts",
       language: "ts",
-      source: "next-guidelines.md, tableau des versions · docs Next 16.3",
+      source: "next-guidelines.md, tableau des versions, docs Next 16.3",
       pitfall:
         "Le proxy est fait pour tourner séparément du rendu, parfois déployé sur le CDN : ne pas compter sur un module ou un global partagés avec l'application. Ce qui doit passer passe par les en-têtes, les cookies, un rewrite ou l'URL.",
       code: `import { NextResponse } from "next/server";
@@ -498,7 +498,7 @@ const pieges = {
       intent:
         "Une variable préfixée est dans le bundle, lisible par qui ouvre les sources, et rien ne prévient.",
       language: "ts",
-      source: "next-guidelines.md §6 bis · react-guidelines.md §4",
+      source: "next-guidelines.md §6 bis, react-guidelines.md §4",
       highlightedLines: [2, 8],
       pitfall:
         'Un secret lu dans un fichier qui s\'avère client est un secret publié. La frontière "use client" se suit de manière transitive, pas fichier par fichier.',
@@ -541,7 +541,7 @@ import { EMISSIONS } from "@/lib/emissions";
       intent:
         "Le kit est la source. Un besoin local est soit un vrai manque à corriger dans le kit, soit un cas à habiller par className.",
       language: "bash",
-      source: "next-guidelines.md §2 · react-guidelines.md §3",
+      source: "next-guidelines.md §2, react-guidelines.md §3",
       pitfall:
         "Un composant du kit modifié en local se fait écraser au prochain add, et la correction ne profite a aucun autre projet.",
       code: `# Le manque se corrige dans le kit, puis se propage.
@@ -561,7 +561,7 @@ components/
       intent:
         "L'échappatoire est pour du markup produit par le projet, et assaini quand même. Le href d'un lien construit depuis de la donnée mérite la même suspicion.",
       language: "tsx",
-      source: "next-guidelines.md §6 bis · react-guidelines.md §4",
+      source: "next-guidelines.md §6 bis, react-guidelines.md §4",
       highlightedLines: [2, 5],
       code: `// Non : le contenu vient du CMS.
 <div dangerouslySetInnerHTML={{ __html: article.body }} />

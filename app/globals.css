@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* Les variantes data-* que les composants du registry supposent : data-open,
+   data-selected, data-horizontal et les autres. Sans elles, les variantes
+   natives de Tailwind s'appliquent et ne lisent pas la même chose. */
+@import "shadcn/tailwind.css";
 
 /* Theme unique clair : la variante dark n'est jamais activee, la classe .dark n'est jamais posee. */
 @custom-variant dark (&:is(.dark *));
