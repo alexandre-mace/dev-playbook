@@ -18,7 +18,7 @@ trois pistes par pile, et un deck d'écrans de code qui se parcourt aux flèches
 
 - `pnpm dev` développement
 - `pnpm build` build de production, et c'est le contrôle : il type-check et échoue sur une erreur de compilation
-- `pnpm lint` Biome
+- `pnpm lint` Biome, puis `scripts/check-mechanical.mjs`
 
 ## Stack
 
@@ -68,8 +68,40 @@ s'allonge, il faut remesurer les `21rem`, pas ajouter une contrainte de hauteur.
 Sous `md`, le `md:` tombe : la carte reprend `h-[min(70vh,42rem)]`. Sans ce repli, le
 bloc de code tombait à quatre lignes sur mobile.
 
+## La porte refuse les règles qui se réduisent à un motif
+
+`scripts/check-mechanical.mjs`, lancé par `pnpm lint`, refuse le point médian, le tiret
+cadratin et un `target="_blank"` sans `rel`. Elle lit le code et la prose du dépôt, parce
+que les règles de typographie d'`agent/writing.md` visent d'abord ce qui se lit.
+
+Deux exclusions qui ne sont pas des oublis. **Le bloc entre `<!-- BEGIN:nextjs-agent-rules -->`
+et son `END` est sauté** : `next dev` le réécrit à chaque lancement, tirets cadratins
+compris, et la section ci-dessus dit de le commiter sans l'éditer. **Les liens
+symboliques aussi** : `docs/*.md` pointe vers dev-standards, qui appartient à un autre
+dépôt et que `/gap-sota` corrige, pas cette porte.
+
+La règle du `rel` se lit sur le fichier entier et non ligne à ligne, l'attribut et son
+`rel` tenant rarement sur la même ligne. Une règle qui crie au loup finit désactivée.
+
 ## Biome ne voit pas le kit
 
 `components/ui/`, `brand.tsx` et `made-with-love.tsx` viennent du registry
 et sont exclus dans `biome.json` : les reformater créerait une dérive avec le kit, qui
 est la source.
+
+**`public/` est exclu aussi, pour une autre raison.** Biome 2.5 lit les SVG, et
+`noSvgWithoutTitle` réclame un `<title>` sur `public/mark.svg`. Ce fichier n'est rendu
+que par `<Brand>`, en `alt=""`, donc décoratif : lui donner un titre le ferait annoncer
+en double avec le nom de la marque, ce que `react-guidelines.md` §6 interdit.
+
+## Les icônes se rendent au build, et ça coûte
+
+`app/icon.tsx` et `app/apple-icon.tsx` rendent un emoji par `ImageResponse` plutôt que de
+le poser dans un `<text>` SVG, dont le dessin dépendrait de la police du système. Le prix
+est un aller-retour vers un CDN pour la police Noto : **le premier build froid passe de
+2 s à 26 s**, les suivants retombent à 1,5 s. Vercel repart froid à chaque déploiement.
+
+Leurs couleurs, et celles de l'image OG, viennent de `lib/theme.ts`, qui lit les tokens
+hexadécimaux de `globals.css` au build. Ce module lit le disque : il n'a rien à faire
+dans `lib/site.ts`, que `components/playbook.tsx` importe et qui part donc dans le bundle
+client.

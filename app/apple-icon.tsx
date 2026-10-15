@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+import { BACKGROUND } from "@/lib/theme";
+
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
@@ -14,7 +16,7 @@ export default function AppleIcon() {
         width: "100%",
         height: "100%",
         fontSize: 128,
-        background: "#FAF8F0",
+        background: BACKGROUND,
       }}
     >
       📗

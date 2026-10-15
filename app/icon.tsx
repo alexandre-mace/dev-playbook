@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+import { BACKGROUND } from "@/lib/theme";
+
 export const size = { width: 64, height: 64 };
 export const contentType = "image/png";
 
@@ -18,7 +20,7 @@ export default function Icon() {
         width: "100%",
         height: "100%",
         fontSize: 46,
-        background: "#FAF8F0",
+        background: BACKGROUND,
         borderRadius: 14,
       }}
     >

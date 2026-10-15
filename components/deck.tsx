@@ -144,6 +144,10 @@ export function Deck({
               type="button"
               tabIndex={-1}
               title={`${rank + 1}. ${screen.title}`}
+              // Le clic ne doit pas non plus poser le focus ici : tabIndex -1
+              // retire la tabulation, pas le focus au clic, et il atterrirait
+              // dans un sous-arbre que l'arbre d'accessibilité dit inexistant.
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => embla?.scrollTo(rank)}
               className="group/segment flex h-6 flex-1 items-center"
             >
