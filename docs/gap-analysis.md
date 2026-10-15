@@ -71,9 +71,10 @@ un `lib/utils.ts` réduit à `export { cn } from "cn"` depuis la CLI 4.21.
 **Idéal** : un type dérivé dit ce qu'il remplace.
 **Actuel** : la clé passée à `Omit` porte un accent que le champ n'a pas.
 
-- [ ] `lib/playbook/rendu.ts:12` : `Omit<Piste, "écrans">` au lieu de `Omit<Piste, "ecrans">` (sûr)
+- [x] `lib/playbook/render.ts:11` : `Omit<Piste, "écrans">` au lieu de `Omit<Piste, "ecrans">` (sûr)
   - Vérifié en compilant le cas isolé : `Omit` contraint sa clé à `keyof any`, pas à `keyof T`, donc une clé qui n'existe pas n'émet aucune erreur et `ecrans` survit à l'omission. Le type compile parce que `EcranColore[]` est assignable à `Ecran[]`, pas parce que l'`Omit` a fait son travail.
   - La ligne 16 juste en dessous, `Omit<Pile, "pistes">`, est correcte : c'est bien une faute de frappe, pas une intention.
+  - Fermé par le renommage en anglais : la clé accentuée est devenue `"screens"`, qui existe. Le passage l'a corrigé sans le viser.
 
 ## 6. Aucune porte ne refuse les règles mécaniques (Moyenne priorité)
 
@@ -91,7 +92,7 @@ en audit.
 dans `components/icons.tsx`. §4, `app/apple-icon.png` en 180×180 accompagne `app/icon.svg`.
 **Actuel** : le mark GitHub est inline dans l'en-tête, et l'icône iOS manque.
 
-- [ ] `components/entete.tsx:6-16` : `MarqueGithub` défini dans le fichier qui l'utilise (sûr)
+- [ ] `components/header.tsx:4-14` : `GithubMark` défini dans le fichier qui l'utilise (sûr)
   - Sa place est `components/icons.tsx`, qui n'existe pas encore.
 - [ ] `app/` : pas d'`apple-icon.png` (sûr)
   - 180×180, pour l'écran d'accueil iOS. Next émet la balise tout seul.
@@ -127,7 +128,7 @@ pas installé.
 
 - [ ] `lib/playbook/symfony-react.ts` (13), `next.ts` (9), `tanstack-start.ts` (5) : champs `source` du type `"symfony-guidelines.md, Playbook 1 · reactony.md §2"` (sûr)
 - [ ] `app/opengraph-image.tsx:34` : `"Symfony + React · Next.js · TanStack Start"` (sûr)
-- [ ] `app/layout.tsx:11` : le gabarit de titre `` `%s · ${TITRE}` `` (sûr)
+- [ ] `app/layout.tsx:11` : le gabarit de titre `` `%s · ${TITLE}` `` (sûr)
   - La guideline autorise le tiret demi-cadratin pour joindre une page et le site dans un titre, « Annonces – La Grange ». C'est exactement ce cas.
 
 ### 9.3 Cibles tactiles de la réglette
