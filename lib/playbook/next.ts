@@ -444,7 +444,7 @@ export default catchError(Fallback);`,
       language: "json",
       source: "next-guidelines.md §2, react-guidelines.md §3",
       pitfall:
-        "shadcn add theme ne réécrit pas un globals.css déjà configuré : chaque nouveau token se pose à la main, la valeur dans :root et la correspondance --color-x dans @theme inline.",
+        "Le globals.css importe aussi shadcn/tailwind.css, qui déclare les variantes data-open, data-selected, data-horizontal et les autres que les composants du registry supposent. Sans lui, les variantes natives de Tailwind s'appliquent sans lire la même chose : un data-horizontal nu ne correspond à rien, et le panneau d'un Tabs tombe à zéro pixel de large. Et shadcn add theme ne réécrit pas un globals.css déjà configuré : chaque nouveau token se pose à la main, la valeur dans :root et la correspondance --color-x dans @theme inline.",
       code: `{
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "base-nova",

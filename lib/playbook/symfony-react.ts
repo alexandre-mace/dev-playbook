@@ -393,7 +393,7 @@ public function withPrice(Money $price): static { /* ... */ }`,
       rank: "Lecture",
       title: "Les filtres GET passent par un DTO",
       intent:
-        "Le seul cas où un DTO se justifie d'office : des filtres ne sont pas une entité.",
+        "Le seul cas où un DTO se justifie d'office : des filtres ne sont pas une entité. Il passe par HTTP, donc il vit dans src/Dto/, pas dans Domain/.",
       language: "php",
       source: "reactony.md §1, symfony-guidelines.md §4",
       highlightedLines: [5, 7],
@@ -414,6 +414,7 @@ public function list(
       title: "Le DTO allowlist, pour un sous-ensemble",
       intent:
         "Quand le formulaire édite quelques champs d'une grosse entité, le DTO est la liste de ce qui a le droit de bouger, et ObjectMapper fait le report.",
+      file: "src/Dto/Profile/PartialProfileDto.php",
       language: "php",
       source: "symfony-guidelines.md §4",
       highlightedLines: [3, 5],
@@ -555,11 +556,38 @@ if (errors) {
       source: "reactony.md §6, §10",
       highlightedLines: [1, 2, 3, 4],
       pitfall:
-        'Une tolérance : un comportement DOM sans état, sous une trentaine de lignes, un copier-dans-le-presse-papier par exemple, où un îlot serait disproportionné. Et réactiver Turbo Drive sans décision explicite remonte les îlots React et leur fait perdre leur état. Le site est délibérément en data-turbo="false".',
+        "Un formulaire ne se discute pas : simple ou non, en Symfony Form ou en HTML écrit à la main, il devient un îlot React. Deux exceptions seulement, l'authentification et les formulaires qu'un bundle construit lui-même, le CRUD d'EasyAdmin par exemple. La tolérance Stimulus ne vaut que pour un comportement DOM sans état, sous une trentaine de lignes, un copier-dans-le-presse-papier par exemple. Et réactiver Turbo Drive sans décision explicite remonte les îlots React et leur fait perdre leur état : le site est délibérément en data-turbo=\"false\".",
       code: `{# Le montage, et rien d'autre. #}
 <div {{ react_component('SearchAlertForm', {
     farm: farm|serialize('json', { groups: ['farm:read'] }),
 }) }}></div>`,
+    },
+    {
+      id: "focus-perdu",
+      rank: "Accessibilité",
+      title: "La confirmation qui remplace le bouton cliqué",
+      intent:
+        "Démonter le bouton qui avait le focus le repose sur <body>, et un lecteur d'écran ne dit rien. Une alerte créée, une suggestion envoyée, un écran de remerciement : tous muets.",
+      language: "tsx",
+      source: "react-guidelines.md §6",
+      highlightedLines: [5, 6, 14],
+      pitfall:
+        "L'autre moitié de la règle se mesure : une cible tactile fait au moins 24 × 24 pixels CSS (WCAG 2.2, critère 2.5.8, niveau AA). La règle target-size d'axe la mesure mais dort par défaut, on l'allume dans la vérification E2E.",
+      code: `// Non : le bouton disparaît, le focus tombe sur <body>, rien n'est annoncé.
+{envoye ? <p>Merci !</p> : <Button onClick={envoyer}>Envoyer</Button>}
+
+// Oui : le titre de la confirmation prend le focus en arrivant.
+const titre = useRef<HTMLHeadingElement>(null);
+useEffect(() => { if (envoye) titre.current?.focus(); }, [envoye]);
+
+return envoye ? (
+  <h2 ref={titre} tabIndex={-1}>Merci, votre demande est partie.</h2>
+) : (
+  <Button onClick={envoyer}>Envoyer</Button>
+);
+
+// Ou bien, sans déplacer le focus : une région qui s'annonce toute seule.
+<div role="status">{envoye && "Merci, votre demande est partie."}</div>`,
     },
     {
       id: "query-order",
@@ -583,9 +611,36 @@ return $this->createQueryBuilder('a')
     ->getResult();`,
     },
     {
+      id: "204",
+      rank: "HTTP",
+      title: "Un 200 qui porte {ok: true}",
+      intent:
+        "Un succès sans rien à retourner répond 204. Une seule convention, parce qu'un client qui lit le corps doit savoir s'il y en a un.",
+      language: "php",
+      source: "symfony-guidelines.md §3",
+      highlightedLines: [4, 10],
+      pitfall:
+        "Un projet a fini avec 17 routes en 200 et 29 en 204, les deux dans le même contrôleur. Le front finit alors par parser défensivement partout, et personne ne sait plus laquelle fait quoi.",
+      code: `<?php
+
+// Non.
+return $this->json(['ok' => true]);
+
+// Oui : rien à dire, donc pas de corps.
+#[IsGranted('edit', subject: 'searchAlert')]
+#[Route('/api/search-alerts/{id}', methods: ['DELETE'], format: 'json')]
+public function delete(SearchAlert $searchAlert): Response
+{
+    $this->entityManager->remove($searchAlert);
+    $this->entityManager->flush();
+
+    return new Response(null, Response::HTTP_NO_CONTENT);
+}`,
+    },
+    {
       id: "secret-log",
       rank: "Logs",
-      title: "Un secret en query string finit dans les logs",
+      title: "Ce qu'un log ne doit pas emporter",
       intent:
         "HttpClient journalise chaque appel en INFO avec l'URL complète, query string comprise. Une API amont qui s'authentifie par un paramètre key ou token écrit donc son propre identifiant dans les logs, et dans les breadcrumbs Sentry.",
       file: "src/Logger/RedactQueryStringSecretsProcessor.php",
@@ -611,6 +666,15 @@ final class RedactQueryStringSecretsProcessor
         ));
     }
 }
+
+// L'autre moitié de la règle est dans l'appel lui-même : l'exception sous la clé
+// exception, la seule que le handler Sentry lit pour attacher la trace, et
+// l'enregistrement nommé par son id. Le contexte part chez Sentry et chez le
+// drain de logs de l'hébergeur, où une donnée personnelle n'a rien à faire.
+$this->logger->error('Synchronisation amont échouée', [
+    'exception' => $e,
+    'searchAlertId' => $searchAlert->id,
+]);
 
 // Pour /gap-code : un client d'API qui passe un identifiant dans query est un
 // constat Haute tant que rien ne caviarde à la sortie.`,
