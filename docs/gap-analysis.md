@@ -30,7 +30,7 @@ le refuse quand il manque.
 **Actuel** : `scripts/check-mechanical.mjs:34` cherche un `rel=` dans les 200 caractères
 qui suivent. Une fenêtre de caractères n'est pas une balise.
 
-- [ ] `scripts/check-mechanical.mjs:34` : la règle laisse passer un vrai défaut et en invente un faux (sûr)
+- [x] `scripts/check-mechanical.mjs:34` : la règle laisse passer un vrai défaut et en invente un faux (sûr)
   - **Faux négatif, prouvé** : un `<a target="_blank">` sans aucun `rel`, suivi cinquante caractères plus loin d'une autre balise qui en porte un, passe. La porte rend 0. C'est précisément la chose que cette règle existe pour refuser, et elle se tait.
   - **Faux positif, prouvé** : un lien correct dont le `rel` arrive après 200 caractères de `className` est refusé. Les classes de ce dépôt dépassent couramment cette longueur, donc le cas n'est pas théorique.
   - Le correctif est de lire la balise, pas une fenêtre : isoler chaque balise ouvrante, puis vérifier qu'une balise qui porte `target="_blank"` porte aussi `rel=`. Les trois liens du dépôt passent aujourd'hui, mais par chance, pas par la règle.
@@ -42,7 +42,7 @@ qui suivent. Une fenêtre de caractères n'est pas une balise.
 lien symbolique sous `docs/`, qui existe pour les deux guidelines de la pile.
 **Actuel** : les règles d'écriture sont citées par un chemin qui n'existe pas ici.
 
-- [ ] `AGENTS.md:75` : `agent/writing.md` n'existe pas dans le dépôt (sûr)
+- [x] `AGENTS.md:75` : `agent/writing.md` n'existe pas dans le dépôt (sûr)
   - Relevé par `check-agent-files.py`, le script du skill. Ce n'est pas un faux positif : `docs/` ne lie que `next-guidelines.md` et `react-guidelines.md`, et il n'y a pas d'`agent/` ici.
   - La dépendance est pourtant réelle depuis hier : c'est `agent/writing.md` qui fournit les règles de typographie que la porte applique désormais à la prose du dépôt. Un `docs/writing.md` pointant vers `dev-standards/agent/writing.md` ferait résoudre la citation et suivrait la convention déjà en place.
   - Même famille, `AGENTS.md:95` cite `react-guidelines.md` à nu là où la ligne 28 écrit `docs/react-guidelines.md`.

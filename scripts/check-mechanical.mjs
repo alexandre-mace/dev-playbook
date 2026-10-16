@@ -29,9 +29,12 @@ const RULES = [
     // Une règle de code : en prose, target="_blank" est une citation, pas un
     // attribut, et la documentation de cette porte la cite forcément.
     code: true,
-    // Sur le fichier entier : l'attribut et son rel sont sur deux lignes.
-    scope: "file",
-    pattern: /target=["']_blank["'](?![\s\S]{0,200}?rel=)/g,
+    // Sur la balise entière, pas sur une fenêtre de caractères : l'attribut et
+    // son rel sont souvent sur deux lignes, et une fenêtre attrape le rel de la
+    // balise d'à côté tout en ratant celui qui vient après un long className.
+    scope: "tag",
+    pattern: /<a\s[^>]*>/g,
+    refuse: (tag) => /target=["']_blank["']/.test(tag) && !/\brel=/.test(tag),
     fix: 'ajouter rel="noreferrer" sur la même balise',
   },
 ];
@@ -90,6 +93,7 @@ for (const file of FILES) {
 
     rule.pattern.lastIndex = 0;
     for (const match of content.matchAll(rule.pattern)) {
+      if (rule.refuse && !rule.refuse(match[0])) continue;
       failures += 1;
       const line = content.slice(0, match.index).split("\n").length;
       report(file, line, rule, lines[line - 1] ?? match[0]);

@@ -25,7 +25,8 @@ trois pistes par pile, et un deck d'écrans de code qui se parcourt aux flèches
 Next 16 en App Router, React 19 avec le compilateur, TypeScript strict, Tailwind 4,
 shadcn sur base Base UI, kit `@alexandremace`. Coloration Shiki au build, carrousel Embla.
 
-Conventions de la stack : `docs/next-guidelines.md` et `docs/react-guidelines.md`, liens
+Conventions de la stack : `docs/next-guidelines.md`, `docs/react-guidelines.md` et
+`docs/writing.md`, liens
 vers [dev-standards](https://github.com/alexandre-mace/dev-standards).
 
 ## Le contenu est la moitié du projet
@@ -72,7 +73,7 @@ bloc de code tombait à quatre lignes sur mobile.
 
 `scripts/check-mechanical.mjs`, lancé par `pnpm lint`, refuse le point médian, le tiret
 cadratin et un `target="_blank"` sans `rel`. Elle lit le code et la prose du dépôt, parce
-que les règles de typographie d'`agent/writing.md` visent d'abord ce qui se lit.
+que les règles de typographie de `docs/writing.md` visent d'abord ce qui se lit.
 
 Deux exclusions qui ne sont pas des oublis. **Le bloc entre `<!-- BEGIN:nextjs-agent-rules -->`
 et son `END` est sauté** : `next dev` le réécrit à chaque lancement, tirets cadratins
@@ -80,8 +81,10 @@ compris, et la section ci-dessus dit de le commiter sans l'éditer. **Les liens
 symboliques aussi** : `docs/*.md` pointe vers dev-standards, qui appartient à un autre
 dépôt et que `/gap-sota` corrige, pas cette porte.
 
-La règle du `rel` se lit sur le fichier entier et non ligne à ligne, l'attribut et son
-`rel` tenant rarement sur la même ligne. Une règle qui crie au loup finit désactivée.
+La règle du `rel` lit la balise entière, pas une fenêtre de caractères : l'attribut et son
+`rel` tiennent rarement sur la même ligne, et une fenêtre attrape le `rel` de la balise
+d'à côté tout en ratant celui qui vient après un long `className`. Une règle qui crie au
+loup finit désactivée, une règle qui se tait ne sert à rien.
 
 ## Biome ne voit pas le kit
 
@@ -92,7 +95,7 @@ est la source.
 **`public/` est exclu aussi, pour une autre raison.** Biome 2.5 lit les SVG, et
 `noSvgWithoutTitle` réclame un `<title>` sur `public/mark.svg`. Ce fichier n'est rendu
 que par `<Brand>`, en `alt=""`, donc décoratif : lui donner un titre le ferait annoncer
-en double avec le nom de la marque, ce que `react-guidelines.md` §6 interdit.
+en double avec le nom de la marque, ce que `docs/react-guidelines.md` §6 interdit.
 
 ## Les icônes se rendent au build, et ça coûte
 
