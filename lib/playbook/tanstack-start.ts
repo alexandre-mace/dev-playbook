@@ -366,7 +366,7 @@ const patterns = {
       rank: "Compilateur",
       title: "Le compilateur, chemin natif sur Vite",
       intent:
-        "Le chemin Rust est environ dix fois plus rapide que le plugin Babel. Il demande oxc-transform-react en peer optionnelle.",
+        "Le chemin Rust est environ dix fois plus rapide que le plugin Babel. Il demande oxc-transform-react en peer optionnelle, en 0.152 au moins depuis plugin-react 6.1.2.",
       file: "vite.config.ts",
       language: "ts",
       source: "tanstack-start-guidelines.md, Patterns",
